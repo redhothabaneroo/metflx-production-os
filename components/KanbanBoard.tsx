@@ -1,0 +1,176 @@
+"use client";
+
+import { useState, useRef } from "react";
+import { updateVideoStage } from "@/lib/actions";
+import type { listKanbanBoard } from "@/lib/data";
+
+const MONO = "'IBM Plex Mono', monospace";
+
+type Columns = Awaited<ReturnType<typeof listKanbanBoard>>;
+
+export default function KanbanBoard({ columns, children }: { columns: Columns; children?: React.ReactNode }) {
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const [selected, setSelected] = useState<Record<number, boolean>>({});
+  const dragIds = useRef<number[]>([]);
+
+  const selectedIds = Object.keys(selected)
+    .filter((k) => selected[Number(k)])
+    .map(Number);
+
+  const toggleExpand = (code: string) => setExpanded((s) => ({ ...s, [code]: !s[code] }));
+  const toggleSelect = (id: number) =>
+    setSelected((s) => {
+      const next = { ...s };
+      if (next[id]) delete next[id];
+      else next[id] = true;
+      return next;
+    });
+  const clearSelection = () => setSelected({});
+
+  const onCardDragStart = (id: number) => () => {
+    dragIds.current = selected[id] && selectedIds.length ? selectedIds : [id];
+  };
+  const onGroupDragStart = (ids: number[]) => () => {
+    dragIds.current = ids;
+  };
+  const onDrop = (stage: string) => async (e: React.DragEvent) => {
+    e.preventDefault();
+    const ids = dragIds.current;
+    dragIds.current = [];
+    if (ids.length) {
+      await updateVideoStage(ids, stage);
+      setSelected({});
+    }
+  };
+
+  return (
+    <div style={{ animation: "fadeup .4s ease-out" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 14, flexWrap: "wrap" }}>
+        <div style={{ fontSize: 12.5, color: "#5b6470", maxWidth: 620 }}>
+          Columns are post-production stages. Click a company to expand its edits. Click cards to select, then drag any selected card to move one or many to another stage at once.
+        </div>
+        {children}
+        <div style={{ marginLeft: "auto", display: "flex", gap: 14, fontSize: 11, color: "#6b7280" }}>
+          <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <span style={{ width: 9, height: 9, borderRadius: "50%", background: "#3754db" }} />
+            Promo
+          </span>
+          <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <span style={{ width: 9, height: 9, borderRadius: "50%", background: "#0f766e" }} />
+            Retainer
+          </span>
+        </div>
+      </div>
+
+      {selectedIds.length > 0 && (
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14, background: "#eef1fd", border: "1px solid #d4ddfb", borderRadius: 10, padding: "9px 14px" }}>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="#3754db">
+            <circle cx="12" cy="12" r="11" />
+            <path d="M17 9l-6 6-3-3" stroke="#fff" strokeWidth="2.4" fill="none" />
+          </svg>
+          <span style={{ fontSize: 12.5, fontWeight: 600, color: "#23306e" }}>{selectedIds.length} selected</span>
+          <span style={{ fontSize: 12, color: "#4a5578" }}>Drag any selected card to move them together.</span>
+          <button
+            onClick={clearSelection}
+            style={{ marginLeft: "auto", background: "#fff", border: "1px solid #c9d3f5", color: "#3754db", font: "500 12px 'IBM Plex Sans'", borderRadius: 7, padding: "6px 12px", cursor: "pointer" }}
+          >
+            Clear selection
+          </button>
+        </div>
+      )}
+
+      <div style={{ display: "flex", gap: 14, overflowX: "auto", paddingBottom: 14 }}>
+        {columns.map((col) => (
+          <div key={col.stage} style={{ width: 286, flexShrink: 0 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "0 4px 10px" }}>
+              <div style={{ width: 9, height: 9, borderRadius: 3, background: col.fg }} />
+              <div style={{ fontSize: 12.5, fontWeight: 600 }}>{col.name}</div>
+              <div style={{ marginLeft: "auto", fontFamily: MONO, fontSize: 11, color: "#9aa1aa" }}>{col.count}</div>
+            </div>
+            <div
+              onDrop={onDrop(col.stage)}
+              onDragOver={(e) => e.preventDefault()}
+              style={{ minHeight: 260, background: "#fafbfc", border: "1px dashed #e1e4e8", borderRadius: 12, padding: 9, display: "flex", flexDirection: "column", gap: 9 }}
+            >
+              {col.buckets.map((b) => {
+                const isExpanded = expanded[b.code] ?? true;
+                return (
+                  <div key={b.code}>
+                    <div
+                      draggable
+                      onClick={() => toggleExpand(b.code)}
+                      onDragStart={onGroupDragStart(b.videos.map((v) => v.id))}
+                      title="Click to expand · drag to move the whole group"
+                      style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 10px", background: "#fff", border: "1px solid #e6e8ec", borderRadius: 9, cursor: "grab" }}
+                    >
+                      <span style={{ fontSize: 9, color: "#9aa1aa", width: 8, flexShrink: 0 }}>{isExpanded ? "▾" : "▸"}</span>
+                      <span style={{ width: 7, height: 7, borderRadius: "50%", background: b.dot, flexShrink: 0 }} />
+                      <span style={{ fontSize: 12.5, fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{b.name}</span>
+                      {b.monthShow && (
+                        <span style={{ fontFamily: MONO, fontSize: 9, background: "#e9f6ee", color: "#15803d", borderRadius: 4, padding: "2px 6px", flexShrink: 0 }}>M{b.month}</span>
+                      )}
+                      <span style={{ marginLeft: "auto", fontFamily: MONO, fontSize: 11, color: "#5b6470", background: "#f1f3f6", borderRadius: 5, padding: "1px 7px", flexShrink: 0 }}>{b.count}</span>
+                    </div>
+                    {isExpanded && (
+                      <div style={{ display: "flex", flexDirection: "column", gap: 7, padding: "8px 2px 2px" }}>
+                        {b.videos.map((v) => {
+                          const sel = !!selected[v.id];
+                          return (
+                            <div
+                              key={v.id}
+                              draggable
+                              onClick={() => toggleSelect(v.id)}
+                              onDragStart={onCardDragStart(v.id)}
+                              title="Click to select · drag to move"
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 9,
+                                background: sel ? "#eef1fd" : "#fff",
+                                border: `1px solid ${sel ? "#3754db" : "#e3e6ea"}`,
+                                borderLeft: `3px solid ${v.accent}`,
+                                borderRadius: 9,
+                                padding: "9px 10px",
+                                cursor: "grab",
+                              }}
+                            >
+                              {sel ? (
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="#3754db" style={{ flexShrink: 0 }}>
+                                  <circle cx="12" cy="12" r="11" />
+                                  <path d="M17 9l-6 6-3-3" stroke="#fff" strokeWidth="2.4" fill="none" />
+                                </svg>
+                              ) : (
+                                <svg width="11" height="15" viewBox="0 0 24 24" fill="#c4c9d0" style={{ flexShrink: 0 }}>
+                                  <circle cx="9" cy="5" r="1.7" />
+                                  <circle cx="15" cy="5" r="1.7" />
+                                  <circle cx="9" cy="12" r="1.7" />
+                                  <circle cx="15" cy="12" r="1.7" />
+                                  <circle cx="9" cy="19" r="1.7" />
+                                  <circle cx="15" cy="19" r="1.7" />
+                                </svg>
+                              )}
+                              <span style={{ fontFamily: MONO, fontSize: 11.5, fontWeight: 600, color: "#1a1d21", flex: 1, minWidth: 0 }}>{v.code}</span>
+                              {v.monthShow && (
+                                <span style={{ fontFamily: MONO, fontSize: 9, background: "#e9f6ee", color: "#15803d", borderRadius: 4, padding: "2px 5px", flexShrink: 0 }}>M{v.month}</span>
+                              )}
+                              {v.irShow && (
+                                <span style={{ fontFamily: MONO, fontSize: 9, background: "#f1ecfd", color: "#7c3aed", borderRadius: 4, padding: "2px 5px", flexShrink: 0 }}>IR{v.ir}</span>
+                              )}
+                              {v.crShow && (
+                                <span style={{ fontFamily: MONO, fontSize: 9, background: "#fdf3e7", color: "#b45309", borderRadius: 4, padding: "2px 5px", flexShrink: 0 }}>CR{v.cr}</span>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
