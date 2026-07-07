@@ -512,8 +512,9 @@ export async function getClientDetail(code: string) {
 
   const buildMonthSections = async () => {
     const curMo = client.currentMonth || 1;
+    const totalMo = client.totalMonths || 6;
     const allRetainerVideos = await prisma.video.findMany({ where: { clientCode: code, month: { not: null } }, orderBy: [{ month: "asc" }, { num: "asc" }] });
-    return [1, 2, 3, 4, 5, 6].map((mo) => {
+    return Array.from({ length: totalMo }, (_, i) => i + 1).map((mo) => {
       const scopeKey = `m${mo}`;
       const moShootDate = shootDateMap.get(scopeKey) || null;
       const moDue = addBusinessDays(moShootDate, 10);
