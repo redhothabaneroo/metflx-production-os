@@ -8,7 +8,7 @@ const MONO = "'IBM Plex Mono', monospace";
 
 function ClientRow({ c, gridCols }: { c: Awaited<ReturnType<typeof listDashboardClients>>["retainers"][number]; gridCols: string }) {
   return (
-    <Link href={`/detail/${c.code}`} style={{ display: "block", borderTop: "1px solid #f1f3f6", padding: "13px 18px", cursor: "pointer", textDecoration: "none", color: "inherit" }}>
+    <Link href={`/detail/${c.code}`} className="hover-row" style={{ display: "block", borderTop: "1px solid #f1f3f6", padding: "13px 18px", cursor: "pointer", textDecoration: "none", color: "inherit" }}>
       <div style={{ display: "grid", gridTemplateColumns: gridCols, gap: 14, alignItems: "center" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 11, minWidth: 0 }}>
           <div style={{ width: 32, height: 32, borderRadius: 8, background: c.typeBg, color: c.typeFg, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: MONO, fontSize: 11, fontWeight: 600, flexShrink: 0 }}>
@@ -166,7 +166,7 @@ export default async function DashboardPage() {
           </div>
           {upcoming.length === 0 && <div style={{ fontSize: 12, color: "#9aa1aa", padding: "0 2px 12px" }}>Nothing scheduled yet.</div>}
           {upcoming.map((u, i) => (
-            <Link key={i} href={`/detail/${u.code}`} style={{ display: "flex", gap: 11, padding: "10px 2px", borderTop: "1px solid #f1f3f6", cursor: "pointer", textDecoration: "none", color: "inherit" }}>
+            <Link key={i} href={`/detail/${u.code}`} className="hover-row" style={{ display: "flex", gap: 11, padding: "10px 2px", borderTop: "1px solid #f1f3f6", cursor: "pointer", textDecoration: "none", color: "inherit" }}>
               <div style={{ textAlign: "center", width: 34, flexShrink: 0 }}>
                 <div style={{ fontFamily: MONO, fontSize: 9, textTransform: "uppercase", color: "#9aa1aa", letterSpacing: ".05em" }}>{u.day}</div>
                 <div style={{ fontSize: 16, fontWeight: 600, lineHeight: 1.1 }}>{u.dnum}</div>

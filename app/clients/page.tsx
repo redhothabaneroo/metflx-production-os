@@ -42,6 +42,7 @@ export default async function ClientsPage() {
                 <Link
                   key={c.code}
                   href={`/detail/${c.code}`}
+                  className="hover-card"
                   style={{ display: "block", background: "#fff", border: "1px solid #e3e6ea", borderRadius: 10, padding: 12, cursor: "pointer", textDecoration: "none", color: "inherit" }}
                 >
                   <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 7 }}>

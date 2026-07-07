@@ -34,6 +34,7 @@ export default function FolderMenu({ menu }: { menu: Menu }) {
                 <Link
                   key={c.code}
                   href={`/detail/${c.code}`}
+                  className={c.active ? undefined : "hover-row"}
                   style={{
                     display: "flex",
                     alignItems: "center",

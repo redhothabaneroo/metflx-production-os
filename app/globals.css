@@ -22,6 +22,30 @@ select {
   font-family: inherit;
 }
 
+button,
+a,
+select,
+input[type="date"] {
+  transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease, box-shadow 150ms ease, opacity 150ms ease, transform 100ms ease;
+}
+
+button:active {
+  transform: scale(0.97);
+}
+
+a:active {
+  opacity: 0.8;
+}
+
+[draggable="true"] {
+  transition: box-shadow 150ms ease, transform 150ms ease, opacity 150ms ease;
+}
+
+[draggable="true"]:active {
+  cursor: grabbing;
+  box-shadow: 0 8px 20px rgba(10, 10, 10, 0.12);
+}
+
 ::-webkit-scrollbar {
   height: 10px;
   width: 10px;
@@ -51,4 +75,20 @@ select {
 
 .fadeup {
   animation: fadeup 0.3s ease-out;
+}
+
+.hover-row {
+  transition: background-color 150ms ease;
+}
+.hover-row:hover {
+  background-color: #fafbfc;
+}
+
+.hover-card {
+  transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease;
+}
+.hover-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(10, 10, 10, 0.08);
+  border-color: #d3d7dd;
 }

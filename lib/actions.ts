@@ -58,14 +58,14 @@ export async function createClient(input: {
     },
   });
 
-  for (let i = 0; i < num; i++) {
-    await prisma.video.create({
-      data: {
+  if (num > 0) {
+    await prisma.video.createMany({
+      data: Array.from({ length: num }, (_, i) => ({
         clientCode: code,
         code: code + String(i + 1).padStart(3, "0"),
         title: VIDEO_TITLES[i % VIDEO_TITLES.length],
         stage: "On Queue",
-      },
+      })),
     });
   }
 
@@ -85,16 +85,18 @@ export async function addVideos(input: { clientCode: string; count: string; stag
     const mo = parseInt(input.month || "1", 10) || 1;
     const existing = await prisma.video.findMany({ where: { clientCode: input.clientCode, month: mo } });
     let maxNum = existing.reduce((a, v) => Math.max(a, v.num || 0), 0);
-    for (let i = 0; i < count; i++) {
-      const num = ++maxNum;
-      await prisma.video.create({
-        data: {
-          clientCode: input.clientCode,
-          month: mo,
-          num,
-          code: input.clientCode + String(mo).padStart(2, "0") + String(num).padStart(2, "0"),
-          stage,
-        },
+    if (count > 0) {
+      await prisma.video.createMany({
+        data: Array.from({ length: count }, () => {
+          const num = ++maxNum;
+          return {
+            clientCode: input.clientCode,
+            month: mo,
+            num,
+            code: input.clientCode + String(mo).padStart(2, "0") + String(num).padStart(2, "0"),
+            stage,
+          };
+        }),
       });
     }
     revalidateAll();
@@ -102,15 +104,17 @@ export async function addVideos(input: { clientCode: string; count: string; stag
   } else {
     const existing = await prisma.video.findMany({ where: { clientCode: input.clientCode, month: null } });
     let maxNum = existing.reduce((a, v) => Math.max(a, parseInt(v.code.replace(input.clientCode, ""), 10) || 0), 0);
-    for (let i = 0; i < count; i++) {
-      const num = ++maxNum;
-      await prisma.video.create({
-        data: {
-          clientCode: input.clientCode,
-          code: input.clientCode + String(num).padStart(3, "0"),
-          title: "New deliverable",
-          stage,
-        },
+    if (count > 0) {
+      await prisma.video.createMany({
+        data: Array.from({ length: count }, () => {
+          const num = ++maxNum;
+          return {
+            clientCode: input.clientCode,
+            code: input.clientCode + String(num).padStart(3, "0"),
+            title: "New deliverable",
+            stage,
+          };
+        }),
       });
     }
     revalidateAll();

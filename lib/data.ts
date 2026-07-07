@@ -154,6 +154,7 @@ export async function listKanbanBoard() {
           month: singleMonth,
           videos: cvs.map((v) => ({
             id: v.id,
+            clientCode: code,
             code: v.code,
             title: v.title || "Deliverable",
             month: v.month,
