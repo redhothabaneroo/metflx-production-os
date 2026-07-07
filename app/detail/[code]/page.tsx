@@ -35,14 +35,6 @@ export default async function DetailPage({ params }: { params: Promise<{ code: s
             </div>
             <div style={{ marginLeft: "auto", display: "flex", gap: 26 }}>
               <div>
-                <div style={{ fontFamily: MONO, fontSize: 9, textTransform: "uppercase", letterSpacing: ".08em", color: "#9aa1aa" }}>Account</div>
-                <div style={{ fontSize: 13, fontWeight: 600, marginTop: 3 }}>{detail.account}</div>
-              </div>
-              <div>
-                <div style={{ fontFamily: MONO, fontSize: 9, textTransform: "uppercase", letterSpacing: ".08em", color: "#9aa1aa" }}>Editor</div>
-                <div style={{ fontSize: 13, fontWeight: 600, marginTop: 3 }}>{detail.editor}</div>
-              </div>
-              <div>
                 <div style={{ fontFamily: MONO, fontSize: 9, textTransform: "uppercase", letterSpacing: ".08em", color: "#9aa1aa" }}>Next milestone</div>
                 <div style={{ fontSize: 13, fontWeight: 600, marginTop: 3, color: "#b45309" }}>{detail.nextMilestone}</div>
               </div>
