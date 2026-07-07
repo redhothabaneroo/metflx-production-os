@@ -18,6 +18,7 @@ export default function ClientInfoCard({ code, detail }: { code: string; detail:
   const [start, setStart] = useState(detail.info.start === "—" ? "" : detail.info.start);
   const [end, setEnd] = useState(detail.info.end === "—" || detail.info.end === "One-time delivery" ? "" : detail.info.end);
   const [shootDate, setShootDate] = useState(detail.shootDate);
+  const [totalMonths, setTotalMonths] = useState(String(detail.totalMonths));
 
   return (
     <div style={{ background: "#fff", border: "1px solid #e3e6ea", borderRadius: 14, padding: 18 }}>
@@ -72,6 +73,24 @@ export default function ClientInfoCard({ code, detail }: { code: string; detail:
             style={{ ...fieldStyle, font: "600 13px 'IBM Plex Sans'", color: "#1a1d21" }}
           />
         </div>
+        {detail.isRetainer && (
+          <div>
+            <div style={labelStyle}>Contract length (months)</div>
+            <input
+              type="number"
+              min={1}
+              max={24}
+              value={totalMonths}
+              onChange={(e) => setTotalMonths(e.target.value)}
+              onBlur={() => {
+                const n = Math.max(1, Math.min(24, parseInt(totalMonths, 10) || detail.totalMonths));
+                setTotalMonths(String(n));
+                startTransition(() => updateClientInfo(code, { totalMonths: n }));
+              }}
+              style={{ ...fieldStyle, font: "600 13px 'IBM Plex Sans'", color: "#1a1d21" }}
+            />
+          </div>
+        )}
         <div style={{ display: "flex", gap: 14 }}>
           <div style={{ flex: 1 }}>
             <div style={labelStyle}>Started</div>

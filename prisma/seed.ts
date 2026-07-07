@@ -4,6 +4,7 @@ import { VIDEO_TITLES, ONBOARDING_TASK_DEFS } from "../lib/business";
 const prisma = new PrismaClient();
 
 const CURRENT_MONTH_OF: Record<string, number> = { LN: 3, IC: 5, GR: 2, OL: 3, MC: 3, PZ: 2 };
+const TOTAL_MONTHS_OF: Record<string, number> = { OL: 3 };
 const CONTRACT_START: Record<string, { y: number; m: number }> = {
   LN: { y: 2026, m: 5 },
   IC: { y: 2026, m: 2 },
@@ -78,9 +79,10 @@ async function main() {
 
   for (const c of CLIENTS) {
     const cs = CONTRACT_START[c.code];
+    const totalMonths = TOTAL_MONTHS_OF[c.code] || 6;
     const contractStart = c.contractStart ?? (cs ? new Date(cs.y, cs.m - 1, 1) : undefined);
     const contractEnd =
-      c.contractEnd !== undefined ? c.contractEnd : cs ? new Date(cs.y, cs.m - 1 + 6, 1) : undefined;
+      c.contractEnd !== undefined ? c.contractEnd : cs ? new Date(cs.y, cs.m - 1 + totalMonths, 1) : undefined;
 
     await prisma.client.upsert({
       where: { code: c.code },
@@ -100,7 +102,7 @@ async function main() {
         contractStart,
         contractEnd,
         currentMonth: CURRENT_MONTH_OF[c.code],
-        totalMonths: 6,
+        totalMonths,
         shootDate: c.shootDate,
         videosPerMonth: c.type === "RETAINER" ? 10 : 10,
       },

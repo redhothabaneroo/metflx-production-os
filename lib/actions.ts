@@ -165,7 +165,7 @@ export async function updateShootDate(clientCode: string, scopeKey: string, date
 
 export async function updateClientInfo(
   clientCode: string,
-  fields: Partial<{ contact: string; email: string; plan: string; contractStart: string; contractEnd: string }>
+  fields: Partial<{ contact: string; email: string; plan: string; contractStart: string; contractEnd: string; totalMonths: number }>
 ) {
   const data: Record<string, unknown> = {};
   if (fields.contact !== undefined) data.contact = fields.contact;
@@ -173,6 +173,7 @@ export async function updateClientInfo(
   if (fields.plan !== undefined) data.plan = fields.plan;
   if (fields.contractStart !== undefined) data.contractStart = fields.contractStart ? new Date(fields.contractStart + "T00:00:00") : null;
   if (fields.contractEnd !== undefined) data.contractEnd = fields.contractEnd ? new Date(fields.contractEnd + "T00:00:00") : null;
+  if (fields.totalMonths !== undefined) data.totalMonths = Math.max(1, Math.min(24, fields.totalMonths));
   await prisma.client.update({ where: { code: clientCode }, data });
   revalidatePath("/detail/" + clientCode);
   revalidatePath("/dashboard");
