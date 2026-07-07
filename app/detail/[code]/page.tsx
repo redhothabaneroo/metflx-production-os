@@ -44,22 +44,20 @@ export default async function DetailPage({ params }: { params: Promise<{ code: s
               </div>
               <div>
                 <div style={{ fontFamily: MONO, fontSize: 9, textTransform: "uppercase", letterSpacing: ".08em", color: "#9aa1aa" }}>Next milestone</div>
-                <div style={{ fontSize: 13, fontWeight: 600, marginTop: 3, color: "#b45309" }}>{detail.isPromo ? detail.nextMilestone : "—"}</div>
+                <div style={{ fontSize: 13, fontWeight: 600, marginTop: 3, color: "#b45309" }}>{detail.nextMilestone}</div>
               </div>
             </div>
           </div>
 
-          {detail.isPromo && (
-            <div style={{ display: "flex", alignItems: "flex-start", marginTop: 22, overflowX: "auto", paddingBottom: 6 }}>
-              {detail.timeline.map((t, i) => (
-                <div key={i} style={{ flex: "0 0 92px", display: "flex", flexDirection: "column", alignItems: "center", position: "relative" }}>
-                  <div style={{ position: "absolute", top: 8, left: "-50%", width: "100%", height: 2, background: t.leftLineBg, zIndex: 0 }} />
-                  <div style={{ width: 17, height: 17, borderRadius: "50%", background: t.dotBg, border: `2px solid ${t.dotBorder}`, zIndex: 1, flexShrink: 0 }} />
-                  <div style={{ fontSize: 10, fontWeight: t.weight as React.CSSProperties["fontWeight"], marginTop: 8, color: t.fg, textAlign: "center", lineHeight: 1.2, padding: "0 3px" }}>{t.label}</div>
-                </div>
-              ))}
-            </div>
-          )}
+          <div style={{ display: "flex", alignItems: "flex-start", marginTop: 22, overflowX: "auto", paddingBottom: 6 }}>
+            {detail.timeline.map((t, i) => (
+              <div key={i} style={{ flex: "0 0 92px", display: "flex", flexDirection: "column", alignItems: "center", position: "relative" }}>
+                <div style={{ position: "absolute", top: 8, left: "-50%", width: "100%", height: 2, background: t.leftLineBg, zIndex: 0 }} />
+                <div style={{ width: 17, height: 17, borderRadius: "50%", background: t.dotBg, border: `2px solid ${t.dotBorder}`, zIndex: 1, flexShrink: 0, transition: "background-color 200ms ease, border-color 200ms ease" }} />
+                <div style={{ fontSize: 10, fontWeight: t.weight as React.CSSProperties["fontWeight"], marginTop: 8, color: t.fg, textAlign: "center", lineHeight: 1.2, padding: "0 3px" }}>{t.label}</div>
+              </div>
+            ))}
+          </div>
           {detail.isRetainer && (
             <div style={{ marginTop: 18 }}>
               <div style={{ height: 6, background: "#eef0f3", borderRadius: 3, overflow: "hidden", maxWidth: 320 }}>

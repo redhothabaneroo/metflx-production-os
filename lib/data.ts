@@ -475,22 +475,28 @@ export async function getClientDetail(code: string) {
       });
       cur = derivedCur >= 0 ? Math.min(derivedCur + 1, 13) : 0;
     }
+  } else {
+    const currentMonthTasks = buildTaskList(RETAINER_TASK_DEFS, `m${client.currentMonth || 1}`, 0);
+    let derivedCur = -1;
+    currentMonthTasks.forEach((t) => {
+      if (isTaskStatusDone(t.status)) derivedCur = Math.max(derivedCur, t.m);
+    });
+    cur = derivedCur >= 0 ? Math.min(derivedCur + 1, 13) : 0;
   }
 
-  const timeline = isRetainer
-    ? []
-    : MILESTONE_LABELS.map((label, i) => {
-        const done = i < cur, current = i === cur;
-        return {
-          label,
-          dotBg: done ? "#16a34a" : current ? "#3754db" : "#fff",
-          dotBorder: done ? "#16a34a" : current ? "#3754db" : "#cdd2d8",
-          leftLineBg: i === 0 ? "transparent" : done || current ? "#16a34a" : "#e3e6ea",
-          fg: i > cur ? "#9aa1aa" : "#1a1d21",
-          weight: current ? "600" : "500",
-        };
-      });
-  const nextMilestone = cur < MILESTONE_LABELS.length ? MILESTONE_LABELS[cur] : "Complete";
+  const timeline = MILESTONE_LABELS.map((label, i) => {
+    const done = i < cur, current = i === cur;
+    return {
+      label,
+      dotBg: done ? "#16a34a" : current ? "#3754db" : "#fff",
+      dotBorder: done ? "#16a34a" : current ? "#3754db" : "#cdd2d8",
+      leftLineBg: i === 0 ? "transparent" : done || current ? "#16a34a" : "#e3e6ea",
+      fg: i > cur ? "#9aa1aa" : "#1a1d21",
+      weight: current ? "600" : "500",
+    };
+  }).filter((_, i) => !(isRetainer && i === 0));
+  const nextMilestoneIdx = isRetainer ? Math.max(cur, 1) : cur;
+  const nextMilestone = nextMilestoneIdx < MILESTONE_LABELS.length ? MILESTONE_LABELS[nextMilestoneIdx] : "Complete";
 
   const delivStatusFor = (stage: string) => DELIV_STATUS[stage] || DELIV_STATUS["On Queue"];
   const deliverables = queueVideos.map((v, i) => {
