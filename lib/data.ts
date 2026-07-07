@@ -44,11 +44,14 @@ function shortLabel(stage: string) {
 
 export async function listDashboardClients() {
   const clients = await prisma.client.findMany({ orderBy: { createdAt: "asc" } });
-  const queueVideos = await prisma.video.findMany({ where: { month: null } });
+  const allVideos = await prisma.video.findMany();
 
   const rows = clients.map((c) => {
     const t = typeStyle(c.type === "PROMO" ? "Promo" : "Retainer");
-    const cvs = queueVideos.filter((v) => v.clientCode === c.code);
+    const isRetainerRow = c.type === "RETAINER";
+    const cvs = isRetainerRow
+      ? allVideos.filter((v) => v.clientCode === c.code && v.month === (c.currentMonth || 1))
+      : allVideos.filter((v) => v.clientCode === c.code && v.month === null);
     const dist = PIPELINE_STAGES.map((st) => ({
       stage: st,
       short: shortLabel(st),
@@ -350,8 +353,11 @@ export async function listUpcoming() {
 }
 
 export async function listActiveEditsCount() {
-  const count = await prisma.video.count({ where: { month: null, stage: { not: "On Queue" } } });
-  return count;
+  const videos = await prisma.video.findMany({
+    where: { stage: { not: "On Queue" } },
+    include: { client: { select: { type: true, currentMonth: true } } },
+  });
+  return videos.filter((v) => (v.client.type === "RETAINER" ? v.month === (v.client.currentMonth || 1) : v.month === null)).length;
 }
 
 export async function listShootsThisWeekCount() {
