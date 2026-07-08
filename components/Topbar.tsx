@@ -2,8 +2,13 @@
 
 import { usePageHeaderContext } from "./PageHeaderContext";
 
+const DOW = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+const MON_NAMES = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+
 export default function Topbar() {
   const { header } = usePageHeaderContext();
+  const now = new Date();
+  const todayLabel = `${DOW[now.getDay()]} · ${MON_NAMES[now.getMonth()]} ${now.getDate()}`;
   return (
     <header
       style={{
@@ -42,7 +47,7 @@ export default function Topbar() {
         <span style={{ fontSize: 12.5 }}>Search clients, edits…</span>
       </div>
       <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: "#8a9099", letterSpacing: ".04em" }}>
-        TUE · JUN 24
+        {todayLabel}
       </div>
     </header>
   );

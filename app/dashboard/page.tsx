@@ -88,7 +88,10 @@ export default async function DashboardPage() {
 
   return (
     <div style={{ maxWidth: 1480, margin: "0 auto" }} className="fadeup">
-      <PageHeader title="Dashboard" subtitle={`Tuesday, June 24 · ${activeEdits} active edits, ${shootsThisWeek} shoots this week`} />
+      <PageHeader
+        title="Dashboard"
+        subtitle={`${new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })} · ${activeEdits} active edits, ${shootsThisWeek} shoots this week`}
+      />
       <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) 318px", gap: 18, alignItems: "start" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
           <div style={{ background: "#fff", border: "1px solid #e3e6ea", borderRadius: 14, padding: "4px 0 6px" }}>
@@ -168,7 +171,7 @@ export default async function DashboardPage() {
           {upcoming.map((u, i) => (
             <Link key={i} href={`/detail/${u.code}`} className="hover-row" style={{ display: "flex", gap: 11, padding: "10px 2px", borderTop: "1px solid #f1f3f6", cursor: "pointer", textDecoration: "none", color: "inherit" }}>
               <div style={{ textAlign: "center", width: 34, flexShrink: 0 }}>
-                <div style={{ fontFamily: MONO, fontSize: 9, textTransform: "uppercase", color: "#9aa1aa", letterSpacing: ".05em" }}>{u.day}</div>
+                <div style={{ fontFamily: MONO, fontSize: 9, textTransform: "uppercase", color: "#9aa1aa", letterSpacing: ".05em" }}>{u.month}</div>
                 <div style={{ fontSize: 16, fontWeight: 600, lineHeight: 1.1 }}>{u.dnum}</div>
               </div>
               <div style={{ width: 3, borderRadius: 2, background: u.accent, flexShrink: 0 }} />

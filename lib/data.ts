@@ -244,7 +244,8 @@ export async function listSchedule() {
   const clients = await prisma.client.findMany();
   const shootDates = await prisma.shootDate.findMany();
 
-  const today = new Date(2026, 5, 24); // Tue Jun 24 2026 — matches the design reference's "today"
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
   const monday = new Date(today);
   monday.setDate(today.getDate() - ((today.getDay() + 6) % 7));
 
@@ -336,7 +337,7 @@ export async function listSchedule() {
 export async function listUpcoming() {
   const clients = await prisma.client.findMany();
   const shootDates = await prisma.shootDate.findMany();
-  const today = new Date(2026, 5, 24);
+  const today = new Date();
   today.setHours(0, 0, 0, 0);
 
   type Item = { code: string; name: string; date: Date; title: string; sub: string; kind: "shoot" | "deadline" };
@@ -364,11 +365,11 @@ export async function listUpcoming() {
     meeting: { bg: "#f4eefc", accent: "#7c3aed" },
     deadline: { bg: "#fdf3e7", accent: "#d97706" },
   };
-  const DOW = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+  const MON_NAMES = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
 
   return items.slice(0, 8).map((u) => ({
     code: u.code,
-    day: DOW[u.date.getDay()],
+    month: MON_NAMES[u.date.getMonth()],
     dnum: String(u.date.getDate()),
     title: u.title,
     sub: u.sub,
