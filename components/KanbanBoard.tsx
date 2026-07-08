@@ -187,7 +187,10 @@ export default function KanbanBoard({ columns, children }: { columns: Columns; c
                       {b.monthShow && (
                         <span style={{ fontFamily: MONO, fontSize: 9, background: "#e9f6ee", color: "#15803d", borderRadius: 4, padding: "2px 6px", flexShrink: 0 }}>M{b.month}</span>
                       )}
-                      <span style={{ marginLeft: "auto", fontFamily: MONO, fontSize: 11, color: "#5b6470", background: "#f1f3f6", borderRadius: 5, padding: "1px 7px", flexShrink: 0, transition: "background-color 200ms ease" }}>
+                      {b.dueDate && (
+                        <span style={{ marginLeft: "auto", fontFamily: MONO, fontSize: 9, background: "#fdf3e7", color: "#b45309", borderRadius: 4, padding: "2px 6px", flexShrink: 0 }}>Due {b.dueDate}</span>
+                      )}
+                      <span style={{ marginLeft: b.dueDate ? 0 : "auto", fontFamily: MONO, fontSize: 11, color: "#5b6470", background: "#f1f3f6", borderRadius: 5, padding: "1px 7px", flexShrink: 0, transition: "background-color 200ms ease" }}>
                         {b.count}
                       </span>
                     </div>
@@ -251,6 +254,9 @@ export default function KanbanBoard({ columns, children }: { columns: Columns; c
                             )}
                             {v.crShow && (
                               <span style={{ fontFamily: MONO, fontSize: 9, background: "#fdf3e7", color: "#b45309", borderRadius: 4, padding: "2px 5px", flexShrink: 0 }}>CR{v.cr}</span>
+                            )}
+                            {v.dueDate && (
+                              <span style={{ fontFamily: MONO, fontSize: 9, background: "#fdf3e7", color: "#b45309", borderRadius: 4, padding: "2px 5px", flexShrink: 0 }}>Due {v.dueDate}</span>
                             )}
                           </div>
                         );

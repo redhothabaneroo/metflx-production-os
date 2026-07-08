@@ -133,6 +133,15 @@ export async function listKanbanBoard() {
   const clientMap = new Map(clients.map((c) => [c.code, c]));
   const allVideos = await prisma.video.findMany({ orderBy: { id: "asc" } });
   const boardVideos = allVideos.filter((v) => v.month === null || v.stage !== "Final Delivery");
+  const shootDates = await prisma.shootDate.findMany();
+  const shootDateMap = new Map(shootDates.map((s) => [`${s.clientCode}:${s.scopeKey}`, s.date]));
+
+  const dueDateFor = (clientCode: string, month: number | null) => {
+    const client = clientMap.get(clientCode);
+    const shootDate = month == null ? shootDateMap.get(`${clientCode}:main`) || client?.shootDate || null : shootDateMap.get(`${clientCode}:m${month}`) || null;
+    const due = addBusinessDays(shootDate, 10);
+    return due ? fmtDateShort(due) : null;
+  };
 
   const columns = PIPELINE_STAGES.map((stage) => {
     const sc = stageStyle(stage);
@@ -145,6 +154,8 @@ export async function listKanbanBoard() {
         const t = typeStyle(client.type === "PROMO" ? "Promo" : "Retainer");
         const months = new Set(cvs.map((v) => v.month).filter((m) => m != null));
         const singleMonth = months.size === 1 ? [...months][0] : null;
+        const bucketDueDates = new Set(cvs.map((v) => dueDateFor(code, v.month)).filter((d) => d != null));
+        const bucketDueDate = bucketDueDates.size === 1 ? [...bucketDueDates][0] : null;
         return {
           code,
           name: client.name,
@@ -155,6 +166,7 @@ export async function listKanbanBoard() {
           count: cvs.length,
           monthShow: singleMonth != null,
           month: singleMonth,
+          dueDate: bucketDueDate,
           videos: cvs.map((v) => ({
             id: v.id,
             clientCode: code,
@@ -167,6 +179,7 @@ export async function listKanbanBoard() {
             irShow: v.ir > 0,
             crShow: v.cr > 0,
             accent: t.fg,
+            dueDate: dueDateFor(code, v.month),
           })),
         };
       });
