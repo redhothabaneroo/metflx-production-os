@@ -161,7 +161,7 @@ export default function KanbanBoard({ columns, children }: { columns: Columns; c
               }}
             >
               {col.buckets.map((b) => {
-                const isExpanded = expanded[b.code] ?? true;
+                const isExpanded = expanded[b.code] ?? false;
                 return (
                   <div key={b.code} className="fadeup" style={{ animationDuration: "250ms" }}>
                     <div
