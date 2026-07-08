@@ -1,6 +1,7 @@
 "use client";
 
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 
 export default function Modal({
   onClose,
@@ -11,7 +12,11 @@ export default function Modal({
   maxWidth?: number;
   children: ReactNode;
 }) {
-  return (
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  if (!mounted) return null;
+
+  return createPortal(
     <div
       onClick={onClose}
       style={{
@@ -33,7 +38,8 @@ export default function Modal({
       >
         {children}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 

@@ -1,7 +1,14 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
+
 export default function Toast({ message, onView, onDismiss }: { message: string; onView: () => void; onDismiss: () => void }) {
-  return (
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  if (!mounted) return null;
+
+  return createPortal(
     <div
       className="fadeup"
       style={{
@@ -31,6 +38,7 @@ export default function Toast({ message, onView, onDismiss }: { message: string;
       <button onClick={onDismiss} style={{ border: "none", background: "transparent", color: "#8a9099", cursor: "pointer", fontSize: 14, lineHeight: 1, padding: 2 }}>
         ✕
       </button>
-    </div>
+    </div>,
+    document.body
   );
 }
