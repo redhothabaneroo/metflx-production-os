@@ -29,7 +29,7 @@ export default function OnboardingCard({ code, onboarding }: { code: string; onb
       {expanded && (
         <div style={{ marginTop: 6 }}>
           {onboarding.tasks.map((t) => (
-            <TaskRow key={t.id} task={t} clientCode={code} scopeKey="onb" statusOptions={["Not started", "In progress", "Complete", "Pending"]} />
+            <TaskRow key={t.id} task={t} clientCode={code} scopeKey="onb" statusOptions={["Not started", "In progress", "Complete", "Not applicable", "Pending"]} />
           ))}
         </div>
       )}
