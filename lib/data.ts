@@ -498,23 +498,34 @@ export async function getClientDetail(code: string) {
   if (!isRetainer) {
     const milestoneIdx: Record<string, number> = { "Shoot complete": 5, "Raw files uploaded": 6, "Raw files packaged": 7, Editing: 8, "Internal review": 9, "Client review": 12, "Final delivery": 13 };
     const stageToMilestone = ["Shoot complete", "Raw files uploaded", "Raw files packaged", "Editing", "Internal review", "Client review", "Final delivery"];
-    cur = ({ Onboarding: 0, "Raw upload": 6, Packaging: 7, Editing: 8, "Internal review": 9, "Client review": 12, "Final delivery": 13 } as Record<string, number>)[client.stage] ?? 0;
-    if (producedVideos.length) cur = milestoneIdx[stageToMilestone[liveIdx]] ?? cur;
-    mainTasks = buildTaskList(TASK_DEFS, "main", cur);
-    if (!producedVideos.length) {
-      let derivedCur = onbDone === onboarding.length ? 1 : -1;
-      mainTasks.forEach((t) => {
-        if (isTaskStatusDone(t.status)) derivedCur = Math.max(derivedCur, t.m);
-      });
-      cur = derivedCur >= 0 ? Math.min(derivedCur + 1, 13) : 0;
-    }
+    let curFromStage = ({ Onboarding: 0, "Raw upload": 6, Packaging: 7, Editing: 8, "Internal review": 9, "Client review": 12, "Final delivery": 13 } as Record<string, number>)[client.stage] ?? 0;
+    if (producedVideos.length) curFromStage = milestoneIdx[stageToMilestone[liveIdx]] ?? curFromStage;
+    mainTasks = buildTaskList(TASK_DEFS, "main", curFromStage);
+
+    // A task marked complete by hand should be able to advance the timeline
+    // even if the matching video card hasn't been dragged to that stage yet.
+    let taskDerivedCur = onbDone === onboarding.length ? 1 : -1;
+    mainTasks.forEach((t) => {
+      if (isTaskStatusDone(t.status)) taskDerivedCur = Math.max(taskDerivedCur, t.m);
+    });
+    const curFromTasks = taskDerivedCur >= 0 ? Math.min(taskDerivedCur + 1, 13) : 0;
+    cur = Math.max(curFromStage, curFromTasks);
   } else {
     const currentMonthTasks = buildTaskList(RETAINER_TASK_DEFS, `m${client.currentMonth || 1}`, 0);
-    let derivedCur = -1;
+    let taskDerivedCur = -1;
     currentMonthTasks.forEach((t) => {
-      if (isTaskStatusDone(t.status)) derivedCur = Math.max(derivedCur, t.m);
+      if (isTaskStatusDone(t.status)) taskDerivedCur = Math.max(taskDerivedCur, t.m);
     });
-    cur = derivedCur >= 0 ? Math.min(derivedCur + 1, 13) : 0;
+    const curFromTasks = taskDerivedCur >= 0 ? Math.min(taskDerivedCur + 1, 13) : 0;
+
+    // A video dragged ahead on the Kanban board should be able to advance
+    // the timeline too, even if the task checklist hasn't been ticked yet.
+    const curMonthVideos = await prisma.video.findMany({ where: { clientCode: code, month: client.currentMonth || 1 } });
+    const stageMilestone: Record<string, number> = { Editing: 8, "Internal Review": 9, "Final Delivery": 13 };
+    const bottleneckStage = curMonthVideos.length ? vOrder[Math.min(...curMonthVideos.map((v) => vOrder.indexOf(v.stage)))] : null;
+    const curFromStage = bottleneckStage ? stageMilestone[bottleneckStage] ?? 0 : 0;
+
+    cur = Math.max(curFromTasks, curFromStage);
   }
 
   const timeline = MILESTONE_LABELS.map((label, i) => {
