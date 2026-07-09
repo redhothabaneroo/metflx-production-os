@@ -3,11 +3,9 @@ import Link from "next/link";
 import { getTeamBoard } from "@/lib/data";
 import { TEAM_MEMBERS, avatar, isTaskDone } from "@/lib/business";
 import { PageHeader } from "@/components/PageHeaderContext";
-import TaskRow from "@/components/TaskRow";
+import TeamBoardList from "@/components/TeamBoardList";
 
 export const dynamic = "force-dynamic";
-
-const MONO = "'IBM Plex Mono', monospace";
 
 export default async function TeamMemberPage({ params }: { params: Promise<{ member: string }> }) {
   const { member } = await params;
@@ -52,45 +50,7 @@ export default async function TeamMemberPage({ params }: { params: Promise<{ mem
         })}
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-        {groups.length === 0 && (
-          <div style={{ background: "#fff", border: "1px solid #e3e6ea", borderRadius: 14, padding: 28, textAlign: "center", color: "#9aa1aa", fontSize: 13 }}>
-            No tasks assigned to {name} right now.
-          </div>
-        )}
-        {groups.map((g) => {
-          const groupDone = g.tasks.filter((t) => isTaskDone(t.status)).length;
-          return (
-            <div key={g.clientCode} style={{ background: "#fff", border: "1px solid #e3e6ea", borderRadius: 14, padding: 18 }}>
-              <Link href={`/detail/${g.clientCode}`} style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", color: "inherit" }}>
-                <div style={{ fontSize: 14, fontWeight: 600 }}>{g.clientName}</div>
-                <span
-                  style={{
-                    fontFamily: MONO,
-                    fontSize: 8.5,
-                    letterSpacing: ".06em",
-                    textTransform: "uppercase",
-                    padding: "2px 6px",
-                    borderRadius: 4,
-                    background: g.typeBg,
-                    color: g.typeFg,
-                  }}
-                >
-                  {g.clientType}
-                </span>
-                <span style={{ marginLeft: "auto", fontFamily: MONO, fontSize: 11, color: "#8a9099" }}>
-                  {groupDone}/{g.tasks.length}
-                </span>
-              </Link>
-              <div style={{ marginTop: 6 }}>
-                {g.tasks.map((t) => (
-                  <TaskRow key={`${t.scopeKey}:${t.id}`} task={t} clientCode={g.clientCode} scopeKey={t.scopeKey} statusOptions={t.statusOptions} />
-                ))}
-              </div>
-            </div>
-          );
-        })}
-      </div>
+      <TeamBoardList groups={groups} name={name} />
     </div>
   );
 }
