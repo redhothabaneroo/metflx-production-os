@@ -30,7 +30,7 @@ export const TASK_STATUS_STYLE: Record<string, { bg: string; fg: string; dot: st
 
 export const DELIV_STATUS: Record<string, { label: string; bg: string; fg: string }> = {
   "On Queue": { label: "On queue", bg: "#f1f3f6", fg: "#8a9099" },
-  "Raw Upload": { label: "Not started", bg: "#eef0f3", fg: "#9aa1aa" },
+  "Raw Upload": { label: "Raw upload", bg: "#eef0f3", fg: "#9aa1aa" },
   Packaging: { label: "Packaging", bg: "#eef0f3", fg: "#475569" },
   Editing: { label: "Editing", bg: "#eef1fd", fg: "#3754db" },
   "Internal Review": { label: "Internal review", bg: "#f1ecfd", fg: "#7c3aed" },
