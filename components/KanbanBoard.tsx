@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { updateVideoStage } from "@/lib/actions";
 import type { listKanbanBoard } from "@/lib/data";
 
@@ -45,11 +46,13 @@ function moveVideos(columns: Columns, ids: number[], targetStage: string): Colum
 }
 
 export default function KanbanBoard({ columns, children }: { columns: Columns; children?: React.ReactNode }) {
+  const router = useRouter();
   const [localColumns, setLocalColumns] = useState(columns);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [selected, setSelected] = useState<Record<number, boolean>>({});
   const [dragOverStage, setDragOverStage] = useState<string | null>(null);
   const [justMoved, setJustMoved] = useState<Record<number, boolean>>({});
+  const [syncError, setSyncError] = useState(false);
   const dragIds = useRef<number[]>([]);
   const [, startTransition] = useTransition();
 
@@ -84,13 +87,23 @@ export default function KanbanBoard({ columns, children }: { columns: Columns; c
     dragIds.current = [];
     if (!ids.length) return;
 
+    const previousColumns = localColumns;
     setLocalColumns((cols) => moveVideos(cols, ids, stage));
     setSelected({});
     setJustMoved(Object.fromEntries(ids.map((id) => [id, true])));
     setTimeout(() => setJustMoved({}), 400);
 
-    startTransition(() => {
-      updateVideoStage(ids, stage);
+    startTransition(async () => {
+      try {
+        await updateVideoStage(ids, stage);
+      } catch {
+        // The move didn't actually persist — roll back the optimistic UI so
+        // it doesn't silently drift out of sync with the real data, then
+        // force a refetch to reconcile with whatever the server has.
+        setLocalColumns(previousColumns);
+        setSyncError(true);
+        router.refresh();
+      }
     });
   };
 
@@ -112,6 +125,21 @@ export default function KanbanBoard({ columns, children }: { columns: Columns; c
           </span>
         </div>
       </div>
+
+      {syncError && (
+        <div
+          className="fadeup"
+          style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14, background: "#fdecec", border: "1px solid #f6c6c6", borderRadius: 10, padding: "9px 14px" }}
+        >
+          <span style={{ fontSize: 12.5, fontWeight: 600, color: "#8a2b2b" }}>That move didn't save — reverted and refreshed the board.</span>
+          <button
+            onClick={() => setSyncError(false)}
+            style={{ marginLeft: "auto", background: "#fff", border: "1px solid #f0b8b8", color: "#8a2b2b", font: "500 12px 'IBM Plex Sans'", borderRadius: 7, padding: "6px 12px", cursor: "pointer" }}
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
 
       {selectedIds.length > 0 && (
         <div
