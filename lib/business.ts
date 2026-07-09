@@ -141,14 +141,14 @@ export const RETAINER_TASK_DEFS = [
 export const OWNER_EDITABLE_TASKS = ["plan", "approval", "shoot", "rediscovery"];
 
 export const ONBOARDING_TASK_DEFS = [
-  { id: "invoice", label: "Payment invoice sent", owner: "Priya" },
-  { id: "onbemail", label: "Send onboarding email and SLA", owner: "Priya" },
-  { id: "slackinvite", label: "Slack invite sent", owner: "Priya" },
-  { id: "payment", label: "Payment complete", owner: "Priya" },
-  { id: "sla", label: "SLA signed", owner: "Priya" },
-  { id: "joined", label: "Joined Slack", owner: "Priya" },
-  { id: "discbook", label: "Discovery call booked", owner: "Priya" },
-  { id: "disccomplete", label: "Discovery call complete", owner: "Priya" },
+  { id: "invoice", label: "Payment invoice sent", owner: "Trixy" },
+  { id: "onbemail", label: "Send onboarding email and SLA", owner: "Trixy" },
+  { id: "slackinvite", label: "Slack invite sent", owner: "Trixy" },
+  { id: "payment", label: "Payment complete", owner: "Trixy" },
+  { id: "sla", label: "SLA signed", owner: "Trixy" },
+  { id: "joined", label: "Joined Slack", owner: "Trixy" },
+  { id: "discbook", label: "Discovery call booked", owner: "Trixy" },
+  { id: "disccomplete", label: "Discovery call complete", owner: "Trixy" },
 ];
 
 export const MILESTONE_LABELS = [
