@@ -168,6 +168,8 @@ export const MILESTONE_LABELS = [
   "Final delivery",
 ];
 
+export const TEAM_MEMBERS = ["Brody", "Trixy", "Nikko"];
+
 export const VIDEO_TITLES = [
   "Hero film",
   "Promo",
