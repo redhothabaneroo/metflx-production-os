@@ -637,64 +637,82 @@ export async function getClientDetail(code: string) {
   };
 }
 
+const ONB_STATUS_OPTIONS = ["Not started", "In progress", "Complete", "Not applicable", "Pending"];
+const PROMO_STATUS_OPTIONS = ["Not started", "In progress", "Complete", "Pending"];
+const RETAINER_STATUS_OPTIONS = ["Not started", "In progress", "Complete", "Not applicable", "Pending"];
+
 export async function getTeamBoard(member: string) {
   const clients = await prisma.client.findMany({ orderBy: { createdAt: "asc" } });
+  const av = avatar(member);
 
-  type BoardItem = {
-    clientCode: string;
-    clientName: string;
-    clientType: string;
-    typeBg: string;
-    typeFg: string;
-    taskId: string;
-    scopeKey: string;
+  type BoardTask = {
+    id: string;
     label: string;
+    owner: string;
+    ownerBg: string;
+    ownerFg: string;
+    ownerInit: string;
     status: string;
     statusBg: string;
     statusFg: string;
     statusDot: string;
     statusBorder: string;
+    ownerEditable?: boolean;
+    scopeKey: string;
+    statusOptions: string[];
   };
-  const items: BoardItem[] = [];
+  type ClientGroup = {
+    clientCode: string;
+    clientName: string;
+    clientType: string;
+    typeBg: string;
+    typeFg: string;
+    tasks: BoardTask[];
+  };
 
-  const addTask = (
-    detail: NonNullable<Awaited<ReturnType<typeof getClientDetail>>>,
-    t: { id: string; label: string; owner: string; status: string; statusBg: string; statusFg: string; statusDot: string; statusBorder: string },
-    scopeKey: string
-  ) => {
-    if (t.owner !== member) return;
-    items.push({
-      clientCode: detail.code,
-      clientName: detail.name,
-      clientType: detail.type,
-      typeBg: detail.typeBg,
-      typeFg: detail.typeFg,
-      taskId: t.id,
-      scopeKey,
-      label: t.label,
-      status: t.status,
-      statusBg: t.statusBg,
-      statusFg: t.statusFg,
-      statusDot: t.statusDot,
-      statusBorder: t.statusBorder,
-    });
-  };
+  const groups: ClientGroup[] = [];
 
   for (const c of clients) {
     const detail = await getClientDetail(c.code);
     if (!detail) continue;
+
+    const tasks: BoardTask[] = [];
+    const pushTask = (
+      t: { id: string; label: string; owner: string; status: string; statusBg: string; statusFg: string; statusDot: string; statusBorder: string; ownerEditable?: boolean },
+      scopeKey: string,
+      statusOptions: string[]
+    ) => {
+      if (t.owner !== member) return;
+      tasks.push({
+        id: t.id,
+        label: t.label,
+        owner: t.owner,
+        ownerBg: av.bg,
+        ownerFg: av.fg,
+        ownerInit: av.initials,
+        status: t.status,
+        statusBg: t.statusBg,
+        statusFg: t.statusFg,
+        statusDot: t.statusDot,
+        statusBorder: t.statusBorder,
+        ownerEditable: t.ownerEditable,
+        scopeKey,
+        statusOptions,
+      });
+    };
+
     if (detail.isPromo) {
-      detail.onboarding.tasks.forEach((t) => addTask(detail, t, "onb"));
-      detail.tasks.forEach((t) => addTask(detail, t, t.scopeKey));
+      detail.onboarding.tasks.forEach((t) => pushTask(t, "onb", ONB_STATUS_OPTIONS));
+      detail.tasks.forEach((t) => pushTask(t, t.scopeKey, PROMO_STATUS_OPTIONS));
     } else {
       const currentSection = detail.monthSections.find((m) => m.month === detail.currentMonth);
-      currentSection?.tasks.forEach((t) => addTask(detail, t, t.scopeKey));
+      currentSection?.tasks.forEach((t) => pushTask(t, t.scopeKey, RETAINER_STATUS_OPTIONS));
+    }
+
+    if (tasks.length) {
+      groups.push({ clientCode: detail.code, clientName: detail.name, clientType: detail.type, typeBg: detail.typeBg, typeFg: detail.typeFg, tasks });
     }
   }
 
-  const STATUS_COLUMNS = ["Not started", "In progress", "Pending", "Complete"];
-  return STATUS_COLUMNS.map((status) => ({
-    status,
-    items: items.filter((i) => (status === "Complete" ? isTaskDone(i.status) : i.status === status)),
-  }));
+  return groups;
 }
