@@ -4,6 +4,8 @@ import { useState, useEffect, useTransition } from "react";
 import { updateTaskStatus, updateTaskOwner } from "@/lib/actions";
 import { TASK_STATUS_STYLE, avatar } from "@/lib/business";
 
+const MONO = "'IBM Plex Mono', monospace";
+
 type Task = {
   id: string;
   label: string;
@@ -24,11 +26,13 @@ export default function TaskRow({
   clientCode,
   scopeKey,
   statusOptions,
+  dueDate,
 }: {
   task: Task;
   clientCode: string;
   scopeKey: string;
   statusOptions: string[];
+  dueDate?: string | null;
 }) {
   const [, startTransition] = useTransition();
   const [status, setStatus] = useState(task.status);
@@ -96,6 +100,9 @@ export default function TaskRow({
           <div style={{ fontSize: 11, color: "#9aa1aa", marginTop: 1 }}>{task.owner}</div>
         )}
       </div>
+      {dueDate !== undefined && (
+        <div style={{ width: 64, flexShrink: 0, fontFamily: MONO, fontSize: 11, color: dueDate ? "#5b6470" : "#c4c9d0", textAlign: "right" }}>{dueDate || "—"}</div>
+      )}
       <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
         <span style={{ position: "absolute", left: 11, width: 7, height: 7, borderRadius: "50%", background: s.dot, pointerEvents: "none", transition: "background-color 150ms ease" }} />
         <select

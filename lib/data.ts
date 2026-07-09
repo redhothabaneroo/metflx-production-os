@@ -643,7 +643,17 @@ const RETAINER_STATUS_OPTIONS = ["Not started", "In progress", "Complete", "Not 
 
 export async function getTeamBoard(member: string) {
   const clients = await prisma.client.findMany({ orderBy: { createdAt: "asc" } });
+  const shootDatesAll = await prisma.shootDate.findMany();
+  const shootDateMap = new Map(shootDatesAll.map((s) => [`${s.clientCode}:${s.scopeKey}`, s.date]));
   const av = avatar(member);
+
+  const dueDateFor = (clientCode: string, scopeKey: string) => {
+    if (scopeKey === "onb") return null;
+    const client = clients.find((c) => c.code === clientCode);
+    const shootDate = scopeKey === "main" ? shootDateMap.get(`${clientCode}:main`) || client?.shootDate || null : shootDateMap.get(`${clientCode}:${scopeKey}`) || null;
+    const due = addBusinessDays(shootDate, 10);
+    return due ? fmtDateShort(due) : null;
+  };
 
   type BoardTask = {
     id: string;
@@ -660,6 +670,7 @@ export async function getTeamBoard(member: string) {
     ownerEditable?: boolean;
     scopeKey: string;
     statusOptions: string[];
+    dueDate: string | null;
   };
   type ClientGroup = {
     clientCode: string;
@@ -698,6 +709,7 @@ export async function getTeamBoard(member: string) {
         ownerEditable: t.ownerEditable,
         scopeKey,
         statusOptions,
+        dueDate: dueDateFor(detail.code, scopeKey),
       });
     };
 

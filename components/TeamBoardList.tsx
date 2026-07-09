@@ -78,9 +78,15 @@ export default function TeamBoardList({ groups, name }: { groups: Groups; name: 
                   {groupDone}/{g.tasks.length}
                 </span>
               </Link>
-              <div style={{ marginTop: 6 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 2px 0", marginTop: 4 }}>
+                <div style={{ width: 22, flexShrink: 0 }} />
+                <div style={{ flex: 1, minWidth: 0 }} />
+                <div style={{ width: 64, flexShrink: 0, fontFamily: MONO, fontSize: 9.5, textTransform: "uppercase", letterSpacing: ".06em", color: "#9aa1aa", textAlign: "right" }}>Due</div>
+                <div style={{ width: 128, flexShrink: 0, fontFamily: MONO, fontSize: 9.5, textTransform: "uppercase", letterSpacing: ".06em", color: "#9aa1aa" }}>Status</div>
+              </div>
+              <div>
                 {g.tasks.map((t) => (
-                  <TaskRow key={`${t.scopeKey}:${t.id}`} task={t} clientCode={g.clientCode} scopeKey={t.scopeKey} statusOptions={t.statusOptions} />
+                  <TaskRow key={`${t.scopeKey}:${t.id}`} task={t} clientCode={g.clientCode} scopeKey={t.scopeKey} statusOptions={t.statusOptions} dueDate={t.dueDate} />
                 ))}
               </div>
             </div>
