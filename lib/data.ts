@@ -671,6 +671,8 @@ export async function getTeamBoard(member: string) {
     scopeKey: string;
     statusOptions: string[];
     dueDate: string | null;
+    custom?: boolean;
+    customId?: number;
   };
   type ClientGroup = {
     clientCode: string;
@@ -680,6 +682,14 @@ export async function getTeamBoard(member: string) {
     typeFg: string;
     tasks: BoardTask[];
   };
+
+  const customTasks = await prisma.customTask.findMany({ where: { owner: member }, orderBy: { createdAt: "asc" } });
+  const customTasksByClient = new Map<string, typeof customTasks>();
+  for (const ct of customTasks) {
+    const list = customTasksByClient.get(ct.clientCode) || [];
+    list.push(ct);
+    customTasksByClient.set(ct.clientCode, list);
+  }
 
   const groups: ClientGroup[] = [];
 
@@ -719,6 +729,28 @@ export async function getTeamBoard(member: string) {
     } else {
       const currentSection = detail.monthSections.find((m) => m.month === detail.currentMonth);
       currentSection?.tasks.forEach((t) => pushTask(t, t.scopeKey, RETAINER_STATUS_OPTIONS));
+    }
+
+    for (const ct of customTasksByClient.get(c.code) || []) {
+      const s = TASK_STATUS_STYLE[ct.status] || TASK_STATUS_STYLE["Not started"];
+      tasks.push({
+        id: `custom-${ct.id}`,
+        label: ct.label,
+        owner: ct.owner,
+        ownerBg: av.bg,
+        ownerFg: av.fg,
+        ownerInit: av.initials,
+        status: ct.status,
+        statusBg: s.bg,
+        statusFg: s.fg,
+        statusDot: s.dot,
+        statusBorder: s.border,
+        scopeKey: "custom",
+        statusOptions: RETAINER_STATUS_OPTIONS,
+        dueDate: ct.dueDate ? fmtDateShort(ct.dueDate) : null,
+        custom: true,
+        customId: ct.id,
+      });
     }
 
     if (tasks.length) {

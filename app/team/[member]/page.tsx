@@ -1,9 +1,10 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { getTeamBoard } from "@/lib/data";
+import { getTeamBoard, listClientOptions } from "@/lib/data";
 import { TEAM_MEMBERS, avatar, isTaskDone } from "@/lib/business";
 import { PageHeader } from "@/components/PageHeaderContext";
 import TeamBoardList from "@/components/TeamBoardList";
+import AddTaskButton from "@/components/AddTaskButton";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +14,7 @@ export default async function TeamMemberPage({ params }: { params: Promise<{ mem
   if (!name) notFound();
 
   const groups = await getTeamBoard(name);
+  const clientOptions = await listClientOptions();
   const total = groups.reduce((a, g) => a + g.tasks.length, 0);
   const done = groups.reduce((a, g) => a + g.tasks.filter((t) => isTaskDone(t.status)).length, 0);
 
@@ -20,7 +22,7 @@ export default async function TeamMemberPage({ params }: { params: Promise<{ mem
     <div style={{ maxWidth: 900, margin: "0 auto", animation: "fadeup .4s ease-out" }}>
       <PageHeader title="Team Boards" subtitle={`${name} · ${done}/${total} tasks complete`} />
 
-      <div style={{ display: "flex", gap: 8, marginBottom: 18 }}>
+      <div style={{ display: "flex", gap: 8, marginBottom: 18, alignItems: "center" }}>
         {TEAM_MEMBERS.map((m) => {
           const active = m === name;
           const a = avatar(m);
@@ -48,6 +50,9 @@ export default async function TeamMemberPage({ params }: { params: Promise<{ mem
             </Link>
           );
         })}
+        <div style={{ marginLeft: "auto" }}>
+          <AddTaskButton clientOptions={clientOptions} member={name} />
+        </div>
       </div>
 
       <TeamBoardList groups={groups} name={name} />

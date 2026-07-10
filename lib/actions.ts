@@ -184,3 +184,25 @@ export async function updateFileLink(clientCode: string, tag: "RAW" | "FIO" | "D
   await prisma.client.update({ where: { code: clientCode }, data: { [field]: link } });
   revalidatePath("/detail/" + clientCode);
 }
+
+export async function createCustomTask(input: { clientCode: string; label: string; owner: string; dueDate: string }) {
+  await prisma.customTask.create({
+    data: {
+      clientCode: input.clientCode,
+      label: input.label.trim(),
+      owner: input.owner,
+      dueDate: input.dueDate ? new Date(input.dueDate + "T00:00:00") : null,
+    },
+  });
+  revalidatePath("/team", "layout");
+}
+
+export async function updateCustomTaskStatus(id: number, status: string) {
+  await prisma.customTask.update({ where: { id }, data: { status } });
+  revalidatePath("/team", "layout");
+}
+
+export async function deleteCustomTask(id: number) {
+  await prisma.customTask.delete({ where: { id } });
+  revalidatePath("/team", "layout");
+}

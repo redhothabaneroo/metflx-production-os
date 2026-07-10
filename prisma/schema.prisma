@@ -38,9 +38,10 @@ model Client {
   finalDeliveryLink String?
   createdAt        DateTime  @default(now())
 
-  videos     Video[]
-  tasks      Task[]
-  shootDates ShootDate[]
+  videos      Video[]
+  tasks       Task[]
+  shootDates  ShootDate[]
+  customTasks CustomTask[]
 
   @@map("clients")
 }
@@ -72,6 +73,19 @@ model Task {
 
   @@unique([clientCode, scopeKey, taskId])
   @@map("tasks")
+}
+
+model CustomTask {
+  id         Int      @id @default(autoincrement())
+  clientCode String
+  client     Client   @relation(fields: [clientCode], references: [code], onDelete: Cascade)
+  label      String
+  owner      String
+  status     String   @default("Not started")
+  dueDate    DateTime?
+  createdAt  DateTime @default(now())
+
+  @@map("custom_tasks")
 }
 
 model ShootDate {

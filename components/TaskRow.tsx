@@ -27,12 +27,16 @@ export default function TaskRow({
   scopeKey,
   statusOptions,
   dueDate,
+  onStatusChangeOverride,
+  onDelete,
 }: {
   task: Task;
   clientCode: string;
   scopeKey: string;
   statusOptions: string[];
   dueDate?: string | null;
+  onStatusChangeOverride?: (value: string) => void;
+  onDelete?: () => void;
 }) {
   const [, startTransition] = useTransition();
   const [status, setStatus] = useState(task.status);
@@ -46,7 +50,11 @@ export default function TaskRow({
 
   const onStatusChange = (value: string) => {
     setStatus(value);
-    startTransition(() => updateTaskStatus(clientCode, scopeKey, task.id, value));
+    if (onStatusChangeOverride) {
+      onStatusChangeOverride(value);
+    } else {
+      startTransition(() => updateTaskStatus(clientCode, scopeKey, task.id, value));
+    }
   };
   const onOwnerChange = (value: string) => {
     setOwner(value);
@@ -131,6 +139,29 @@ export default function TaskRow({
           <path d="m6 9 6 6 6-6" />
         </svg>
       </div>
+      {onDelete && (
+        <button
+          onClick={onDelete}
+          title="Delete task"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: 22,
+            height: 22,
+            flexShrink: 0,
+            border: "none",
+            background: "transparent",
+            cursor: "pointer",
+            color: "#c4c9d0",
+            borderRadius: 6,
+          }}
+        >
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+            <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6" />
+          </svg>
+        </button>
+      )}
     </div>
   );
 }

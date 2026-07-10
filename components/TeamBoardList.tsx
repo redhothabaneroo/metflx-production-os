@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import TaskRow from "./TaskRow";
+import { updateCustomTaskStatus, deleteCustomTask } from "@/lib/actions";
 import { isTaskDone } from "@/lib/business";
 import type { getTeamBoard } from "@/lib/data";
 
@@ -11,6 +13,8 @@ const MONO = "'IBM Plex Mono', monospace";
 type Groups = Awaited<ReturnType<typeof getTeamBoard>>;
 
 export default function TeamBoardList({ groups, name }: { groups: Groups; name: string }) {
+  const router = useRouter();
+  const [, startTransition] = useTransition();
   const [showComplete, setShowComplete] = useState(false);
 
   const visibleGroups = groups
@@ -86,7 +90,24 @@ export default function TeamBoardList({ groups, name }: { groups: Groups; name: 
               </div>
               <div>
                 {g.tasks.map((t) => (
-                  <TaskRow key={`${t.scopeKey}:${t.id}`} task={t} clientCode={g.clientCode} scopeKey={t.scopeKey} statusOptions={t.statusOptions} dueDate={t.dueDate} />
+                  <TaskRow
+                    key={`${t.scopeKey}:${t.id}`}
+                    task={t}
+                    clientCode={g.clientCode}
+                    scopeKey={t.scopeKey}
+                    statusOptions={t.statusOptions}
+                    dueDate={t.dueDate}
+                    onStatusChangeOverride={
+                      t.custom && t.customId != null
+                        ? (value: string) => startTransition(() => updateCustomTaskStatus(t.customId!, value))
+                        : undefined
+                    }
+                    onDelete={
+                      t.custom && t.customId != null
+                        ? () => startTransition(async () => { await deleteCustomTask(t.customId!); router.refresh(); })
+                        : undefined
+                    }
+                  />
                 ))}
               </div>
             </div>
