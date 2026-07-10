@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import TaskRow from "./TaskRow";
 import { updateShootDate } from "@/lib/actions";
+import { isTaskDone } from "@/lib/business";
 import type { getClientDetail } from "@/lib/data";
 
 const MONO = "'IBM Plex Mono', monospace";
@@ -14,8 +15,10 @@ export default function MonthSection({ clientCode, section }: { clientCode: stri
   const [expanded, setExpanded] = useState(section.defaultOpen);
   const [tasksOpen, setTasksOpen] = useState(true);
   const [delivOpen, setDelivOpen] = useState(true);
+  const [showComplete, setShowComplete] = useState(false);
   const [, startTransition] = useTransition();
   const scopeKey = `m${section.month}`;
+  const visibleTasks = showComplete ? section.tasks : section.tasks.filter((t) => !isTaskDone(t.status));
 
   return (
     <div style={{ background: "#fff", border: "1px solid #e3e6ea", borderRadius: 14, padding: 18 }}>
@@ -45,15 +48,40 @@ export default function MonthSection({ clientCode, section }: { clientCode: stri
           </div>
 
           <div>
-            <div onClick={() => setTasksOpen((s) => !s)} style={{ display: "flex", alignItems: "center", marginBottom: 6, cursor: "pointer" }}>
-              <span style={{ fontSize: 11, color: "#9aa1aa", width: 14 }}>{tasksOpen ? "▾" : "▸"}</span>
-              <div style={{ fontSize: 13, fontWeight: 600 }}>Tasks</div>
-              <span style={{ marginLeft: "auto", fontFamily: MONO, fontSize: 11, color: "#8a9099" }}>
-                {section.tasksDone}/{section.tasksTotal}
-              </span>
+            <div style={{ display: "flex", alignItems: "center", marginBottom: 6, gap: 10 }}>
+              <div onClick={() => setTasksOpen((s) => !s)} style={{ display: "flex", alignItems: "center", cursor: "pointer", flex: 1, minWidth: 0 }}>
+                <span style={{ fontSize: 11, color: "#9aa1aa", width: 14 }}>{tasksOpen ? "▾" : "▸"}</span>
+                <div style={{ fontSize: 13, fontWeight: 600 }}>Tasks</div>
+                <span style={{ marginLeft: "auto", fontFamily: MONO, fontSize: 11, color: "#8a9099" }}>
+                  {section.tasksDone}/{section.tasksTotal}
+                </span>
+              </div>
+              {tasksOpen && (
+                <button
+                  onClick={() => setShowComplete((s) => !s)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    border: `1px solid ${showComplete ? "#3754db" : "#dde1e6"}`,
+                    background: showComplete ? "#eef1fd" : "#fff",
+                    color: showComplete ? "#3754db" : "#5b6470",
+                    borderRadius: 7,
+                    padding: "5px 10px",
+                    cursor: "pointer",
+                    font: "600 11px 'IBM Plex Sans'",
+                    flexShrink: 0,
+                  }}
+                >
+                  {showComplete ? "Hide complete" : "Show complete"}
+                </button>
+              )}
             </div>
+            {tasksOpen && visibleTasks.length === 0 && (
+              <div style={{ padding: "20px 8px", textAlign: "center", color: "#9aa1aa", fontSize: 12, borderTop: "1px solid #eef0f3" }}>All caught up — nothing outstanding.</div>
+            )}
             {tasksOpen &&
-              section.tasks.map((t) => (
+              visibleTasks.map((t) => (
                 <TaskRow key={t.id} task={t} clientCode={clientCode} scopeKey={scopeKey} statusOptions={["Not started", "In progress", "Complete", "Not applicable", "Pending"]} />
               ))}
           </div>
