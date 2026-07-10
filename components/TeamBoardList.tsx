@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import TaskRow from "./TaskRow";
-import { updateCustomTaskStatus, deleteCustomTask } from "@/lib/actions";
+import { updateCustomTaskStatus, updateCustomTaskDueDate, deleteCustomTask } from "@/lib/actions";
 import { isTaskDone } from "@/lib/business";
 import type { getTeamBoard } from "@/lib/data";
 
@@ -97,9 +97,15 @@ export default function TeamBoardList({ groups, name }: { groups: Groups; name: 
                     scopeKey={t.scopeKey}
                     statusOptions={t.statusOptions}
                     dueDate={t.dueDate}
+                    dueDateRaw={t.dueDateRaw}
                     onStatusChangeOverride={
                       t.custom && t.customId != null
                         ? (value: string) => startTransition(() => updateCustomTaskStatus(t.customId!, value))
+                        : undefined
+                    }
+                    onDueDateChange={
+                      t.custom && t.customId != null
+                        ? (value: string) => startTransition(() => updateCustomTaskDueDate(t.customId!, value))
                         : undefined
                     }
                     onDelete={

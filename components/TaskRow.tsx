@@ -27,7 +27,9 @@ export default function TaskRow({
   scopeKey,
   statusOptions,
   dueDate,
+  dueDateRaw,
   onStatusChangeOverride,
+  onDueDateChange,
   onDelete,
 }: {
   task: Task;
@@ -35,15 +37,24 @@ export default function TaskRow({
   scopeKey: string;
   statusOptions: string[];
   dueDate?: string | null;
+  dueDateRaw?: string | null;
   onStatusChangeOverride?: (value: string) => void;
+  onDueDateChange?: (value: string) => void;
   onDelete?: () => void;
 }) {
   const [, startTransition] = useTransition();
   const [status, setStatus] = useState(task.status);
   const [owner, setOwner] = useState(task.owner);
+  const [due, setDue] = useState(dueDateRaw || "");
 
   useEffect(() => setStatus(task.status), [task.status]);
   useEffect(() => setOwner(task.owner), [task.owner]);
+  useEffect(() => setDue(dueDateRaw || ""), [dueDateRaw]);
+
+  const onDueChange = (value: string) => {
+    setDue(value);
+    onDueDateChange?.(value);
+  };
 
   const s = TASK_STATUS_STYLE[status] || { bg: task.statusBg, fg: task.statusFg, dot: task.statusDot, border: task.statusBorder };
   const ow = avatar(owner);
@@ -108,8 +119,28 @@ export default function TaskRow({
           <div style={{ fontSize: 11, color: "#9aa1aa", marginTop: 1 }}>{task.owner}</div>
         )}
       </div>
-      {dueDate !== undefined && (
-        <div style={{ width: 64, flexShrink: 0, fontFamily: MONO, fontSize: 11, color: dueDate ? "#5b6470" : "#c4c9d0", textAlign: "right" }}>{dueDate || "—"}</div>
+      {onDueDateChange ? (
+        <input
+          type="date"
+          value={due}
+          onChange={(e) => onDueChange(e.target.value)}
+          style={{
+            width: 108,
+            flexShrink: 0,
+            border: "1px solid #dde1e6",
+            borderRadius: 6,
+            padding: "5px 6px",
+            fontFamily: MONO,
+            fontSize: 11,
+            color: due ? "#5b6470" : "#c4c9d0",
+            cursor: "pointer",
+            background: "#fff",
+          }}
+        />
+      ) : (
+        dueDate !== undefined && (
+          <div style={{ width: 64, flexShrink: 0, fontFamily: MONO, fontSize: 11, color: dueDate ? "#5b6470" : "#c4c9d0", textAlign: "right" }}>{dueDate || "—"}</div>
+        )
       )}
       <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
         <span style={{ position: "absolute", left: 11, width: 7, height: 7, borderRadius: "50%", background: s.dot, pointerEvents: "none", transition: "background-color 150ms ease" }} />

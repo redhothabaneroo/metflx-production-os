@@ -206,3 +206,11 @@ export async function deleteCustomTask(id: number) {
   await prisma.customTask.delete({ where: { id } });
   revalidatePath("/team", "layout");
 }
+
+export async function updateCustomTaskDueDate(id: number, dueDate: string) {
+  await prisma.customTask.update({
+    where: { id },
+    data: { dueDate: dueDate ? new Date(dueDate + "T00:00:00") : null },
+  });
+  revalidatePath("/team", "layout");
+}

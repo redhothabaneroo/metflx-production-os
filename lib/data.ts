@@ -671,6 +671,7 @@ export async function getTeamBoard(member: string) {
     scopeKey: string;
     statusOptions: string[];
     dueDate: string | null;
+    dueDateRaw?: string | null;
     custom?: boolean;
     customId?: number;
   };
@@ -748,6 +749,7 @@ export async function getTeamBoard(member: string) {
         scopeKey: "custom",
         statusOptions: RETAINER_STATUS_OPTIONS,
         dueDate: ct.dueDate ? fmtDateShort(ct.dueDate) : null,
+        dueDateRaw: ct.dueDate ? toDateInputValue(ct.dueDate) : null,
         custom: true,
         customId: ct.id,
       });
