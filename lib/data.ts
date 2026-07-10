@@ -473,6 +473,7 @@ export async function getClientDetail(code: string) {
         statusDot: s.dot,
         statusBorder: s.border,
         scopeKey,
+        dueDate: toDateInputValue(row?.dueDate || null),
       };
     });
 
@@ -487,7 +488,7 @@ export async function getClientDetail(code: string) {
     const status = row?.status || def;
     const s = TASK_STATUS_STYLE[status];
     const ow = avatar(t.owner);
-    return { id: t.id, label: t.label, owner: t.owner, ownerBg: ow.bg, ownerFg: ow.fg, ownerInit: ow.initials, status, statusBg: s.bg, statusFg: s.fg, statusDot: s.dot, statusBorder: s.border };
+    return { id: t.id, label: t.label, owner: t.owner, ownerBg: ow.bg, ownerFg: ow.fg, ownerInit: ow.initials, status, statusBg: s.bg, statusFg: s.fg, statusDot: s.dot, statusBorder: s.border, dueDate: toDateInputValue(row?.dueDate || null) };
   });
   const onbDone = onboarding.filter((t) => isTaskStatusDone(t.status)).length;
 
@@ -643,17 +644,7 @@ const RETAINER_STATUS_OPTIONS = ["Not started", "In progress", "Complete", "Not 
 
 export async function getTeamBoard(member: string) {
   const clients = await prisma.client.findMany({ orderBy: { createdAt: "asc" } });
-  const shootDatesAll = await prisma.shootDate.findMany();
-  const shootDateMap = new Map(shootDatesAll.map((s) => [`${s.clientCode}:${s.scopeKey}`, s.date]));
   const av = avatar(member);
-
-  const dueDateFor = (clientCode: string, scopeKey: string) => {
-    if (scopeKey === "onb") return null;
-    const client = clients.find((c) => c.code === clientCode);
-    const shootDate = scopeKey === "main" ? shootDateMap.get(`${clientCode}:main`) || client?.shootDate || null : shootDateMap.get(`${clientCode}:${scopeKey}`) || null;
-    const due = addBusinessDays(shootDate, 10);
-    return due ? fmtDateShort(due) : null;
-  };
 
   type BoardTask = {
     id: string;
@@ -700,7 +691,7 @@ export async function getTeamBoard(member: string) {
 
     const tasks: BoardTask[] = [];
     const pushTask = (
-      t: { id: string; label: string; owner: string; status: string; statusBg: string; statusFg: string; statusDot: string; statusBorder: string; ownerEditable?: boolean },
+      t: { id: string; label: string; owner: string; status: string; statusBg: string; statusFg: string; statusDot: string; statusBorder: string; ownerEditable?: boolean; dueDate: string },
       scopeKey: string,
       statusOptions: string[]
     ) => {
@@ -720,7 +711,8 @@ export async function getTeamBoard(member: string) {
         ownerEditable: t.ownerEditable,
         scopeKey,
         statusOptions,
-        dueDate: dueDateFor(detail.code, scopeKey),
+        dueDate: t.dueDate ? fmtDateShort(new Date(t.dueDate + "T00:00:00")) : null,
+        dueDateRaw: t.dueDate || null,
       });
     };
 

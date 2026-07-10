@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import TaskRow from "./TaskRow";
-import { updateCustomTaskStatus, updateCustomTaskDueDate, deleteCustomTask } from "@/lib/actions";
+import { updateCustomTaskStatus, updateCustomTaskDueDate, deleteCustomTask, updateTaskDueDate } from "@/lib/actions";
 import { isTaskDone } from "@/lib/business";
 import type { getTeamBoard } from "@/lib/data";
 
@@ -85,7 +85,7 @@ export default function TeamBoardList({ groups, name }: { groups: Groups; name: 
               <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 2px 0", marginTop: 4 }}>
                 <div style={{ width: 22, flexShrink: 0 }} />
                 <div style={{ flex: 1, minWidth: 0 }} />
-                <div style={{ width: 64, flexShrink: 0, fontFamily: MONO, fontSize: 9.5, textTransform: "uppercase", letterSpacing: ".06em", color: "#9aa1aa", textAlign: "right" }}>Due</div>
+                <div style={{ width: 108, flexShrink: 0, fontFamily: MONO, fontSize: 9.5, textTransform: "uppercase", letterSpacing: ".06em", color: "#9aa1aa" }}>Due</div>
                 <div style={{ width: 128, flexShrink: 0, fontFamily: MONO, fontSize: 9.5, textTransform: "uppercase", letterSpacing: ".06em", color: "#9aa1aa" }}>Status</div>
               </div>
               <div>
@@ -106,7 +106,7 @@ export default function TeamBoardList({ groups, name }: { groups: Groups; name: 
                     onDueDateChange={
                       t.custom && t.customId != null
                         ? (value: string) => startTransition(() => updateCustomTaskDueDate(t.customId!, value))
-                        : undefined
+                        : (value: string) => startTransition(() => updateTaskDueDate(g.clientCode, t.scopeKey, t.id, value))
                     }
                     onDelete={
                       t.custom && t.customId != null

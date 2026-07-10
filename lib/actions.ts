@@ -149,6 +149,18 @@ export async function updateTaskOwner(clientCode: string, scopeKey: string, task
   revalidatePath("/detail/" + clientCode);
 }
 
+export async function updateTaskDueDate(clientCode: string, scopeKey: string, taskId: string, dueDate: string) {
+  const existing = await prisma.task.findUnique({ where: { clientCode_scopeKey_taskId: { clientCode, scopeKey, taskId } } });
+  const parsed = dueDate ? new Date(dueDate + "T00:00:00") : null;
+  await prisma.task.upsert({
+    where: { clientCode_scopeKey_taskId: { clientCode, scopeKey, taskId } },
+    update: { dueDate: parsed },
+    create: { clientCode, scopeKey, taskId, status: existing?.status || "Not started", dueDate: parsed },
+  });
+  revalidatePath("/detail/" + clientCode);
+  revalidatePath("/team", "layout");
+}
+
 export async function updateShootDate(clientCode: string, scopeKey: string, date: string) {
   if (!date) {
     await prisma.shootDate.deleteMany({ where: { clientCode, scopeKey } });

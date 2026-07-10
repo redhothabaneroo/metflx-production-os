@@ -70,6 +70,7 @@ model Task {
   taskId     String
   status     String
   owner      String?
+  dueDate    DateTime?
 
   @@unique([clientCode, scopeKey, taskId])
   @@map("tasks")
