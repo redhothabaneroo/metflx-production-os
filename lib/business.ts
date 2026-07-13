@@ -155,6 +155,12 @@ export const RETAINER_TASK_DEFS = [
   { id: "deliver", label: "Deliver to client", owner: "Nikko", m: 13 },
 ];
 
+// Repeat clients bill month-to-month with no lock-in contract, so each
+// month's checklist opens with confirming that month's invoice was paid.
+export const INVOICE_TASK_ID = "invoicepaid";
+
+export const REPEAT_TASK_DEFS = [{ id: INVOICE_TASK_ID, label: "Invoice paid", owner: "Trixy", m: 1 }, ...RETAINER_TASK_DEFS];
+
 export const OWNER_EDITABLE_TASKS = ["plan", "approval", "shoot", "rediscovery"];
 
 export const ONBOARDING_TASK_DEFS = [

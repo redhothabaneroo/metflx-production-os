@@ -16,6 +16,8 @@ import {
   PIPELINE_STAGES,
   TASK_DEFS,
   RETAINER_TASK_DEFS,
+  REPEAT_TASK_DEFS,
+  INVOICE_TASK_ID,
   ONBOARDING_TASK_DEFS,
   MILESTONE_LABELS,
   OWNER_EDITABLE_TASKS,
@@ -500,6 +502,7 @@ export async function getClientDetail(code: string) {
   let mainTasks: ReturnType<typeof buildTaskList> = [];
   let cur = 0;
   const producedVideos = queueVideos.filter((v) => v.stage !== "On Queue");
+  const monthlyTaskDefs = client.type === "REPEAT" ? REPEAT_TASK_DEFS : RETAINER_TASK_DEFS;
 
   if (!isRetainer) {
     const milestoneIdx: Record<string, number> = { "Shoot complete": 5, "Raw files uploaded": 6, "Raw files packaged": 7, Editing: 8, "Internal review": 9, "Client review": 12, "Final delivery": 13 };
@@ -517,9 +520,10 @@ export async function getClientDetail(code: string) {
     const curFromTasks = taskDerivedCur >= 0 ? Math.min(taskDerivedCur + 1, 13) : 0;
     cur = Math.max(curFromStage, curFromTasks);
   } else {
-    const currentMonthTasks = buildTaskList(RETAINER_TASK_DEFS, `m${client.currentMonth || 1}`, 0);
+    const currentMonthTasks = buildTaskList(monthlyTaskDefs, `m${client.currentMonth || 1}`, 0);
     let taskDerivedCur = -1;
     currentMonthTasks.forEach((t) => {
+      if (t.id === INVOICE_TASK_ID) return;
       if (isTaskStatusDone(t.status)) taskDerivedCur = Math.max(taskDerivedCur, t.m);
     });
     const curFromTasks = taskDerivedCur >= 0 ? Math.min(taskDerivedCur + 1, 13) : 0;
@@ -563,7 +567,7 @@ export async function getClientDetail(code: string) {
       const moShootDate = shootDateMap.get(scopeKey) || null;
       const moDue = addBusinessDays(moShootDate, 10);
       const moCurForDefault = mo < curMo ? 99 : 0;
-      const moTasks = buildTaskList(RETAINER_TASK_DEFS, scopeKey, moCurForDefault);
+      const moTasks = buildTaskList(monthlyTaskDefs, scopeKey, moCurForDefault);
       const moDone = moTasks.filter((t) => isTaskStatusDone(t.status)).length;
       const isComplete = moTasks.length > 0 && moDone === moTasks.length;
       const moDeliverables = allRetainerVideos
