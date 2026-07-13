@@ -123,6 +123,10 @@ export default function KanbanBoard({ columns, children }: { columns: Columns; c
             <span style={{ width: 9, height: 9, borderRadius: "50%", background: "#0f766e" }} />
             Retainer
           </span>
+          <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <span style={{ width: 9, height: 9, borderRadius: "50%", background: "#c2410c" }} />
+            Repeat
+          </span>
         </div>
       </div>
 

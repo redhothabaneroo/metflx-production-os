@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "./db";
-import { VIDEO_TITLES, PROMO_STAGE_OPTIONS, RETAINER_STAGE_OPTIONS } from "./business";
+import { VIDEO_TITLES, PROMO_STAGE_OPTIONS, RETAINER_STAGE_OPTIONS, isRecurring } from "./business";
 
 function revalidateAll() {
   revalidatePath("/dashboard");
@@ -13,7 +13,7 @@ function revalidateAll() {
 }
 
 export async function createClient(input: {
-  type: "Retainer" | "Promo";
+  type: "Retainer" | "Promo" | "Repeat";
   business: string;
   contact: string;
   email: string;
@@ -34,7 +34,7 @@ export async function createClient(input: {
   }
 
   const num = Math.max(0, Math.min(30, parseInt(input.videos, 10) || 0));
-  const type = input.type === "Retainer" ? "RETAINER" : "PROMO";
+  const type = input.type === "Retainer" ? "RETAINER" : input.type === "Repeat" ? "REPEAT" : "PROMO";
   const start = input.start ? new Date(input.start + "T00:00:00") : null;
   const end = input.end ? new Date(input.end + "T00:00:00") : null;
 
@@ -49,10 +49,10 @@ export async function createClient(input: {
       note: "New client — onboarding just started.",
       contact: input.contact.trim(),
       email: input.email.trim(),
-      plan: num ? (type === "RETAINER" ? `${num} videos / month` : `${num}-video promo package`) : "—",
+      plan: num ? (isRecurring(type) ? `${num} videos / month` : `${num}-video promo package`) : "—",
       contractStart: start,
       contractEnd: end,
-      currentMonth: type === "RETAINER" ? 1 : null,
+      currentMonth: isRecurring(type) ? 1 : null,
       totalMonths: 6,
       videosPerMonth: num || null,
     },
@@ -77,7 +77,7 @@ export async function addVideos(input: { clientCode: string; count: string; stag
   const client = await prisma.client.findUnique({ where: { code: input.clientCode } });
   if (!client) throw new Error("Client not found");
   const count = Math.max(0, Math.min(30, parseInt(input.count, 10) || 0));
-  const isRetainer = client.type === "RETAINER";
+  const isRetainer = isRecurring(client.type);
   const stageOptions = isRetainer ? RETAINER_STAGE_OPTIONS : PROMO_STAGE_OPTIONS;
   const stage = stageOptions.includes(input.stage) ? input.stage : stageOptions[0];
 

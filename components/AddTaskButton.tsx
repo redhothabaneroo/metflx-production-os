@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Modal, { labelStyle, inputStyle } from "./Modal";
 import { createCustomTask } from "@/lib/actions";
 
-type ClientOption = { code: string; name: string; type: "Retainer" | "Promo"; label: string };
+type ClientOption = { code: string; name: string; type: "Retainer" | "Promo" | "Repeat"; label: string };
 
 export default function AddTaskButton({ clientOptions, member }: { clientOptions: ClientOption[]; member: string }) {
   const router = useRouter();

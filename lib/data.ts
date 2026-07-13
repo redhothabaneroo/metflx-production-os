@@ -8,6 +8,8 @@ import {
   fmtDateShort,
   toDateInputValue,
   isTaskDone,
+  isRecurring,
+  clientTypeLabel,
   TASK_STATUS_STYLE,
   DELIV_STATUS,
   STAGES,
@@ -48,8 +50,8 @@ export async function listDashboardClients() {
   const allVideos = await prisma.video.findMany();
 
   const rows = clients.map((c) => {
-    const t = typeStyle(c.type === "PROMO" ? "Promo" : "Retainer");
-    const isRetainerRow = c.type === "RETAINER";
+    const t = typeStyle(clientTypeLabel(c.type));
+    const isRetainerRow = isRecurring(c.type);
     const cvs = isRetainerRow
       ? allVideos.filter((v) => v.clientCode === c.code && v.month === (c.currentMonth || 1))
       : allVideos.filter((v) => v.clientCode === c.code && v.month === null);
@@ -60,7 +62,7 @@ export async function listDashboardClients() {
       color: stageStyle(st).fg,
     })).filter((d) => d.count > 0);
 
-    const isRetainer = c.type === "RETAINER";
+    const isRetainer = isRecurring(c.type);
     const cur = c.currentMonth || 1;
     const total = c.totalMonths || 6;
     let stageLabel: string;
@@ -92,7 +94,7 @@ export async function listDashboardClients() {
     return {
       code: c.code,
       name: c.name,
-      type: c.type === "PROMO" ? "Promo" : "Retainer",
+      type: clientTypeLabel(c.type),
       typeBg: t.bg,
       typeFg: t.fg,
       stage: stageLabel,
@@ -118,8 +120,9 @@ export async function listDashboardClients() {
   });
 
   const retainers = rows.filter((r) => r.type === "Retainer");
+  const repeats = rows.filter((r) => r.type === "Repeat");
   const promos = rows.filter((r) => r.type === "Promo");
-  return { retainers, promos };
+  return { retainers, repeats, promos };
 }
 
 function toneForStage(stage: string) {
@@ -135,8 +138,8 @@ export async function listClientOptions() {
   return clients.map((c) => ({
     code: c.code,
     name: c.name,
-    type: (c.type === "PROMO" ? "Promo" : "Retainer") as "Promo" | "Retainer",
-    label: `${c.name} — ${c.type === "PROMO" ? "Promo" : "Retainer"}`,
+    type: clientTypeLabel(c.type),
+    label: `${c.name} — ${clientTypeLabel(c.type)}`,
     currentMonth: c.currentMonth || 1,
   }));
 }
@@ -165,7 +168,7 @@ export async function listKanbanBoard() {
       .map((code) => {
         const cvs = inStage.filter((v) => v.clientCode === code);
         const client = clientMap.get(code)!;
-        const t = typeStyle(client.type === "PROMO" ? "Promo" : "Retainer");
+        const t = typeStyle(clientTypeLabel(client.type));
         const months = new Set(cvs.map((v) => v.month).filter((m) => m != null));
         const singleMonth = months.size === 1 ? [...months][0] : null;
         const bucketDueDates = new Set(cvs.map((v) => dueDateFor(code, v.month)).filter((d) => d != null));
@@ -173,7 +176,7 @@ export async function listKanbanBoard() {
         return {
           code,
           name: client.name,
-          type: client.type === "PROMO" ? "Promo" : "Retainer",
+          type: clientTypeLabel(client.type),
           typeBg: t.bg,
           typeFg: t.fg,
           dot: t.fg,
@@ -222,12 +225,12 @@ export async function listLifecycleLanes() {
     const items = clients
       .filter((c) => c.lane === key)
       .map((c) => {
-        const t = typeStyle(c.type === "PROMO" ? "Promo" : "Retainer");
+        const t = typeStyle(clientTypeLabel(c.type));
         const ow = avatar(c.owner);
         return {
           code: c.code,
           client: c.name,
-          type: c.type === "PROMO" ? "Promo" : "Retainer",
+          type: clientTypeLabel(c.type),
           typeFg: t.fg,
           note: c.note || (c.lane === "Onboarding" ? "New client — onboarding just started" : ""),
           owner: c.owner,
@@ -305,13 +308,13 @@ export async function listSchedule() {
   }));
 
   const needsBooking = clients
-    .filter((c) => !c.shootDate && c.lane === "Onboarding" && c.type === "RETAINER")
+    .filter((c) => !c.shootDate && c.lane === "Onboarding" && isRecurring(c.type))
     .map((c) => ({
       client: c.name,
       kind: "Discovery",
       kbg: "#eef1fd",
       kfg: "#3754db",
-      note: "New retainer — book discovery call",
+      note: `New ${clientTypeLabel(c.type).toLowerCase()} client — book discovery call`,
       cta: "Book discovery",
     }));
   if (clients.some((c) => c.code === "EC" && !c.shootDate)) {
@@ -385,7 +388,7 @@ export async function listActiveEditsCount() {
     where: { stage: { not: "On Queue" } },
     include: { client: { select: { type: true, currentMonth: true } } },
   });
-  return videos.filter((v) => (v.client.type === "RETAINER" ? v.month === (v.client.currentMonth || 1) : v.month === null)).length;
+  return videos.filter((v) => (isRecurring(v.client.type) ? v.month === (v.client.currentMonth || 1) : v.month === null)).length;
 }
 
 export async function listShootsThisWeekCount() {
@@ -402,13 +405,14 @@ export async function getClientDetail(code: string) {
 
   const menu = [
     { label: "Retainers", dot: "#0f766e", clients: clients.filter((c) => c.type === "RETAINER") },
+    { label: "Repeat clients", dot: "#c2410c", clients: clients.filter((c) => c.type === "REPEAT") },
     { label: "Promo", dot: "#3754db", clients: clients.filter((c) => c.type === "PROMO") },
   ].map((g) => ({
     label: g.label,
     dot: g.dot,
     count: g.clients.length,
     clients: g.clients.map((c) => {
-      const t = typeStyle(c.type === "PROMO" ? "Promo" : "Retainer");
+      const t = typeStyle(clientTypeLabel(c.type));
       return {
         code: c.code,
         name: c.name,
@@ -419,7 +423,7 @@ export async function getClientDetail(code: string) {
     }),
   }));
 
-  const isRetainer = client.type === "RETAINER";
+  const isRetainer = isRecurring(client.type);
   const queueVideos = await prisma.video.findMany({ where: { clientCode: code, month: null }, orderBy: { id: "asc" } });
   const tasks = await prisma.task.findMany({ where: { clientCode: code } });
   const shootDates = await prisma.shootDate.findMany({ where: { clientCode: code } });
@@ -603,9 +607,9 @@ export async function getClientDetail(code: string) {
   return {
     code: client.code,
     name: client.name,
-    type: client.type === "PROMO" ? "Promo" : "Retainer",
-    typeBg: typeStyle(client.type === "PROMO" ? "Promo" : "Retainer").bg,
-    typeFg: typeStyle(client.type === "PROMO" ? "Promo" : "Retainer").fg,
+    type: clientTypeLabel(client.type),
+    typeBg: typeStyle(clientTypeLabel(client.type)).bg,
+    typeFg: typeStyle(clientTypeLabel(client.type)).fg,
     metaLine,
     account: client.owner,
     editor: client.editor || "—",

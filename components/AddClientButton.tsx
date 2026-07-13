@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Modal, { labelStyle, inputStyle } from "./Modal";
 import { createClient } from "@/lib/actions";
 
-const blank = { type: "Retainer" as "Retainer" | "Promo", business: "", contact: "", email: "", videos: "", start: "", end: "" };
+const blank = { type: "Retainer" as "Retainer" | "Promo" | "Repeat", business: "", contact: "", email: "", videos: "", start: "", end: "" };
 
 export default function AddClientButton() {
   const router = useRouter();
@@ -75,12 +75,21 @@ export default function AddClientButton() {
                   Retainer
                 </button>
                 <button
+                  onClick={() => setForm((f) => ({ ...f, type: "Repeat" }))}
+                  style={{ flex: 1, border: "1px solid #e3e6ea", borderRadius: 9, padding: 10, cursor: "pointer", font: "600 12.5px 'IBM Plex Sans'", background: form.type === "Repeat" ? "#c2410c" : "#fff", color: form.type === "Repeat" ? "#fff" : "#5b6470" }}
+                >
+                  Repeat
+                </button>
+                <button
                   onClick={() => setForm((f) => ({ ...f, type: "Promo" }))}
                   style={{ flex: 1, border: "1px solid #e3e6ea", borderRadius: 9, padding: 10, cursor: "pointer", font: "600 12.5px 'IBM Plex Sans'", background: form.type === "Promo" ? "#3754db" : "#fff", color: form.type === "Promo" ? "#fff" : "#5b6470" }}
                 >
                   Promo
                 </button>
               </div>
+              {form.type === "Repeat" && (
+                <div style={{ fontSize: 11.5, color: "#9aa1aa", marginTop: 6 }}>Month-to-month — same production cycle as a retainer, no lock-in contract.</div>
+              )}
             </div>
 
             <div>
@@ -110,7 +119,7 @@ export default function AddClientButton() {
                 <input type="date" value={form.start} onChange={set("start")} style={inputStyle} />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={labelStyle}>{form.type === "Retainer" ? "Contract end date" : "Delivery date"}</div>
+                <div style={labelStyle}>{form.type === "Promo" ? "Delivery date" : form.type === "Repeat" ? "End date (optional)" : "Contract end date"}</div>
                 <input type="date" value={form.end} onChange={set("end")} style={inputStyle} />
               </div>
             </div>

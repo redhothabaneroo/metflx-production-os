@@ -55,7 +55,21 @@ export function stageStyle(stage: string) {
 }
 
 export function typeStyle(type: string) {
-  return type === "Promo" ? { bg: "#eef1fd", fg: "#3754db" } : { bg: "#e9f4f1", fg: "#0f766e" };
+  if (type === "Promo") return { bg: "#eef1fd", fg: "#3754db" };
+  if (type === "Repeat") return { bg: "#fde8d9", fg: "#c2410c" };
+  return { bg: "#e9f4f1", fg: "#0f766e" };
+}
+
+// Repeat clients are month-to-month (no lock-in contract) but otherwise
+// follow the exact same monthly production cycle as retainer clients.
+export function isRecurring(type: string) {
+  return type === "RETAINER" || type === "REPEAT";
+}
+
+export function clientTypeLabel(type: string): "Retainer" | "Promo" | "Repeat" {
+  if (type === "PROMO") return "Promo";
+  if (type === "REPEAT") return "Repeat";
+  return "Retainer";
 }
 
 const AVATAR_MAP: Record<string, { bg: string; fg: string; initials: string }> = {

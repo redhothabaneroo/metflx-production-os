@@ -13,6 +13,7 @@ datasource db {
 enum ClientType {
   RETAINER
   PROMO
+  REPEAT
 }
 
 model Client {

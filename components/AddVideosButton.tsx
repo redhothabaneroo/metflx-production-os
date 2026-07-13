@@ -7,7 +7,9 @@ import Toast from "./Toast";
 import { addVideos } from "@/lib/actions";
 import { PROMO_STAGE_OPTIONS, RETAINER_STAGE_OPTIONS } from "@/lib/business";
 
-type ClientOption = { code: string; name: string; type: "Retainer" | "Promo"; label: string };
+type ClientOption = { code: string; name: string; type: "Retainer" | "Promo" | "Repeat"; label: string };
+
+const isRetainerLike = (type: ClientOption["type"] | undefined) => type === "Retainer" || type === "Repeat";
 
 export default function AddVideosButton({ clientOptions }: { clientOptions: ClientOption[] }) {
   const router = useRouter();
@@ -20,7 +22,7 @@ export default function AddVideosButton({ clientOptions }: { clientOptions: Clie
   const [toast, setToast] = useState<{ message: string; code: string } | null>(null);
 
   const selected = clientOptions.find((c) => c.code === client);
-  const isRetainer = selected?.type === "Retainer";
+  const isRetainer = isRetainerLike(selected?.type);
   const stageOptions = isRetainer ? RETAINER_STAGE_OPTIONS : PROMO_STAGE_OPTIONS;
   const countNum = Math.max(0, Math.min(30, parseInt(count, 10) || 0));
   const canSave = !!selected && countNum > 0 && !!stage;
@@ -36,7 +38,7 @@ export default function AddVideosButton({ clientOptions }: { clientOptions: Clie
   const onClientChange = (code: string) => {
     setClient(code);
     const cl = clientOptions.find((c) => c.code === code);
-    const opts = cl?.type === "Retainer" ? RETAINER_STAGE_OPTIONS : PROMO_STAGE_OPTIONS;
+    const opts = isRetainerLike(cl?.type) ? RETAINER_STAGE_OPTIONS : PROMO_STAGE_OPTIONS;
     setStage(opts[0]);
   };
 
@@ -102,7 +104,7 @@ export default function AddVideosButton({ clientOptions }: { clientOptions: Clie
                     letterSpacing: ".06em",
                   }}
                 >
-                  {isRetainer ? "Retainer · monthly deliverable" : "Promo · one-off deliverable"}
+                  {isRetainer ? `${selected.type} · monthly deliverable` : "Promo · one-off deliverable"}
                 </div>
 
                 <div style={{ display: "flex", gap: 14 }}>

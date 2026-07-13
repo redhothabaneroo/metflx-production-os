@@ -23,7 +23,7 @@ function ClientRow({ c, gridCols }: { c: Awaited<ReturnType<typeof listDashboard
           <div style={{ minWidth: 0 }}>
             <div style={{ fontFamily: MONO, fontSize: 12.5, fontWeight: 600 }}>{c.monthLabel}</div>
             <div style={{ height: 4, background: "#eef0f3", borderRadius: 3, marginTop: 5, overflow: "hidden", maxWidth: 70 }}>
-              <div style={{ height: "100%", width: c.monthPct, background: "#0f766e", borderRadius: 3 }} />
+              <div style={{ height: "100%", width: c.monthPct, background: c.typeFg, borderRadius: 3 }} />
             </div>
           </div>
         )}
@@ -76,7 +76,7 @@ function ClientRow({ c, gridCols }: { c: Awaited<ReturnType<typeof listDashboard
 }
 
 export default async function DashboardPage() {
-  const [{ retainers, promos }, upcoming, activeEdits, shootsThisWeek] = await Promise.all([
+  const [{ retainers, repeats, promos }, upcoming, activeEdits, shootsThisWeek] = await Promise.all([
     listDashboardClients(),
     listUpcoming(),
     listActiveEditsCount(),
@@ -120,6 +120,32 @@ export default async function DashboardPage() {
               </div>
             </div>
           </div>
+
+          {repeats.length > 0 && (
+            <div style={{ background: "#fff", border: "1px solid #e3e6ea", borderRadius: 14, padding: "4px 0 6px" }}>
+              <div style={{ display: "flex", alignItems: "center", padding: "16px 18px 12px" }}>
+                <span style={{ width: 9, height: 9, borderRadius: "50%", background: "#c2410c", marginRight: 9 }} />
+                <div style={{ fontSize: 14, fontWeight: 600 }}>Repeat clients</div>
+                <div style={{ fontFamily: MONO, fontSize: 10, color: "#8a9099", marginLeft: 8, textTransform: "uppercase", letterSpacing: ".07em" }}>
+                  {repeats.length} active
+                </div>
+              </div>
+              <div style={{ overflowX: "auto" }}>
+                <div style={{ minWidth: 680 }}>
+                  <div style={{ display: "grid", gridTemplateColumns: retainerCols, gap: 14, padding: "0 18px 9px" }}>
+                    {["Client", "Month", "Stage", "Video edits", "What's next", "Status"].map((h) => (
+                      <div key={h} style={{ fontFamily: MONO, fontSize: 9.5, textTransform: "uppercase", letterSpacing: ".08em", color: "#9aa1aa" }}>
+                        {h}
+                      </div>
+                    ))}
+                  </div>
+                  {repeats.map((c) => (
+                    <ClientRow key={c.code} c={c} gridCols={retainerCols} />
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
 
           <div style={{ background: "#fff", border: "1px solid #e3e6ea", borderRadius: 14, padding: "4px 0 6px" }}>
             <div style={{ display: "flex", alignItems: "center", padding: "16px 18px 12px" }}>
