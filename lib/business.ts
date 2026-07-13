@@ -5,6 +5,7 @@ export const STAGES = [
   "Packaging",
   "Editing",
   "Internal Review",
+  "Revision",
   "Client Review",
   "Final Delivery",
 ] as const;
@@ -34,6 +35,7 @@ export const DELIV_STATUS: Record<string, { label: string; bg: string; fg: strin
   Packaging: { label: "Packaging", bg: "#eef0f3", fg: "#475569" },
   Editing: { label: "Editing", bg: "#eef1fd", fg: "#3754db" },
   "Internal Review": { label: "Internal review", bg: "#f1ecfd", fg: "#7c3aed" },
+  Revision: { label: "Revision", bg: "#fdeef0", fg: "#be123c" },
   "Client Review": { label: "Client review", bg: "#fdf3e7", fg: "#b45309" },
   "Final Delivery": { label: "Delivered", bg: "#e9f6ee", fg: "#15803d" },
 };
@@ -45,6 +47,7 @@ export function stageStyle(stage: string) {
     Packaging: { bg: "#eef0f3", fg: "#475569" },
     Editing: { bg: "#eef1fd", fg: "#3754db" },
     "Internal Review": { bg: "#f1ecfd", fg: "#7c3aed" },
+    Revision: { bg: "#fdeef0", fg: "#be123c" },
     "Client Review": { bg: "#fdf3e7", fg: "#b45309" },
     "Final Delivery": { bg: "#e9f6ee", fg: "#15803d" },
   };

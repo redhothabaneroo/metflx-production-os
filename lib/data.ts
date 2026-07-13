@@ -36,6 +36,7 @@ function shortLabel(stage: string) {
     Packaging: "Pkg",
     Editing: "Editing",
     "Internal Review": "Internal",
+    Revision: "Revision",
     "Client Review": "Client",
     "Final Delivery": "Final",
   };
@@ -498,7 +499,7 @@ export async function getClientDetail(code: string) {
 
   if (!isRetainer) {
     const milestoneIdx: Record<string, number> = { "Shoot complete": 5, "Raw files uploaded": 6, "Raw files packaged": 7, Editing: 8, "Internal review": 9, "Client review": 12, "Final delivery": 13 };
-    const stageToMilestone = ["Shoot complete", "Raw files uploaded", "Raw files packaged", "Editing", "Internal review", "Client review", "Final delivery"];
+    const stageToMilestone = ["Shoot complete", "Raw files uploaded", "Raw files packaged", "Editing", "Internal review", "Internal review", "Client review", "Final delivery"];
     let curFromStage = ({ Onboarding: 0, "Raw upload": 6, Packaging: 7, Editing: 8, "Internal review": 9, "Client review": 12, "Final delivery": 13 } as Record<string, number>)[client.stage] ?? 0;
     if (producedVideos.length) curFromStage = milestoneIdx[stageToMilestone[liveIdx]] ?? curFromStage;
     mainTasks = buildTaskList(TASK_DEFS, "main", curFromStage);
@@ -522,7 +523,7 @@ export async function getClientDetail(code: string) {
     // A video dragged ahead on the Kanban board should be able to advance
     // the timeline too, even if the task checklist hasn't been ticked yet.
     const curMonthVideos = await prisma.video.findMany({ where: { clientCode: code, month: client.currentMonth || 1 } });
-    const stageMilestone: Record<string, number> = { Editing: 8, "Internal Review": 9, "Final Delivery": 13 };
+    const stageMilestone: Record<string, number> = { Editing: 8, "Internal Review": 9, Revision: 9, "Final Delivery": 13 };
     const bottleneckStage = curMonthVideos.length ? vOrder[Math.min(...curMonthVideos.map((v) => vOrder.indexOf(v.stage)))] : null;
     const curFromStage = bottleneckStage ? stageMilestone[bottleneckStage] ?? 0 : 0;
 
