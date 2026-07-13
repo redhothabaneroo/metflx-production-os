@@ -59,14 +59,29 @@ export async function createClient(input: {
   });
 
   if (num > 0) {
-    await prisma.video.createMany({
-      data: Array.from({ length: num }, (_, i) => ({
-        clientCode: code,
-        code: code + String(i + 1).padStart(3, "0"),
-        title: VIDEO_TITLES[i % VIDEO_TITLES.length],
-        stage: "On Queue",
-      })),
-    });
+    if (isRecurring(type)) {
+      await prisma.video.createMany({
+        data: Array.from({ length: num }, (_, i) => {
+          const n = i + 1;
+          return {
+            clientCode: code,
+            month: 1,
+            num: n,
+            code: code + "01" + String(n).padStart(2, "0"),
+            stage: "On Queue",
+          };
+        }),
+      });
+    } else {
+      await prisma.video.createMany({
+        data: Array.from({ length: num }, (_, i) => ({
+          clientCode: code,
+          code: code + String(i + 1).padStart(3, "0"),
+          title: VIDEO_TITLES[i % VIDEO_TITLES.length],
+          stage: "On Queue",
+        })),
+      });
+    }
   }
 
   revalidateAll();

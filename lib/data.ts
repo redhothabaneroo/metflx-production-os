@@ -25,6 +25,29 @@ import {
 
 const ORIGINAL_ORDER = ["LN", "IC", "GR", "OL", "MC", "PZ", "EC", "MI"];
 
+// One-time self-heal for a past bug: creating a Retainer/Repeat client
+// never tagged its initial video batch with a month, so those videos were
+// invisible to any month-scoped query (dashboard stage, month sections).
+// Safe to call on every request — a no-op once a client's videos are fixed.
+async function repairOrphanedMonthlyVideos() {
+  const orphaned = await prisma.video.findMany({
+    where: { month: null, client: { type: { in: ["RETAINER", "REPEAT"] } } },
+    orderBy: { id: "asc" },
+  });
+  if (!orphaned.length) return;
+  const byClient = new Map<string, typeof orphaned>();
+  for (const v of orphaned) {
+    const list = byClient.get(v.clientCode) || [];
+    list.push(v);
+    byClient.set(v.clientCode, list);
+  }
+  for (const videos of byClient.values()) {
+    for (let i = 0; i < videos.length; i++) {
+      await prisma.video.update({ where: { id: videos[i].id }, data: { month: 1, num: i + 1 } });
+    }
+  }
+}
+
 export async function getCompanyOrder(): Promise<string[]> {
   const clients = await prisma.client.findMany({ orderBy: { createdAt: "asc" }, select: { code: true } });
   const codes = clients.map((c) => c.code);
@@ -48,6 +71,7 @@ function shortLabel(stage: string) {
 }
 
 export async function listDashboardClients() {
+  await repairOrphanedMonthlyVideos();
   const clients = await prisma.client.findMany({ orderBy: { createdAt: "asc" } });
   const allVideos = await prisma.video.findMany();
 
@@ -401,6 +425,7 @@ export async function listShootsThisWeekCount() {
 const CONTRACTS_FALLBACK: Record<string, { plan: string }> = {};
 
 export async function getClientDetail(code: string) {
+  await repairOrphanedMonthlyVideos();
   const clients = await prisma.client.findMany({ orderBy: { createdAt: "asc" } });
   const client = clients.find((c) => c.code === code) || clients[0];
   if (!client) return null;
