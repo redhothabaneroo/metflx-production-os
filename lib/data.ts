@@ -93,13 +93,30 @@ export async function listDashboardClients() {
     const total = c.totalMonths || 6;
     let stageLabel: string;
     let stageTone: { bg: string; fg: string };
-    if (!cvs.length) {
-      stageLabel = isRetainer ? "Not started" : c.stage;
-      stageTone = isRetainer ? { bg: "#eef0f3", fg: "#5b6470" } : toneForStage(c.stage);
+    const bottleneckStage = (list: typeof cvs) => {
+      const idx = Math.min(...list.map((v) => PIPELINE_STAGES.indexOf(v.stage as (typeof PIPELINE_STAGES)[number])));
+      return PIPELINE_STAGES[idx];
+    };
+    if (isRetainer) {
+      if (!cvs.length) {
+        stageLabel = "Not started";
+        stageTone = { bg: "#eef0f3", fg: "#5b6470" };
+      } else {
+        stageLabel = bottleneckStage(cvs);
+        stageTone = stageStyle(stageLabel);
+      }
     } else {
-      const idx = Math.min(...cvs.map((v) => PIPELINE_STAGES.indexOf(v.stage as (typeof PIPELINE_STAGES)[number])));
-      stageLabel = PIPELINE_STAGES[idx];
-      stageTone = stageStyle(stageLabel);
+      // "On Queue" is just the default a video is created with, before the
+      // shoot even happens — it isn't real progress, so a promo client still
+      // in pre-production keeps showing its actual business-stage field.
+      const producedVideos = cvs.filter((v) => v.stage !== "On Queue");
+      if (!producedVideos.length) {
+        stageLabel = c.stage;
+        stageTone = toneForStage(c.stage);
+      } else {
+        stageLabel = bottleneckStage(producedVideos);
+        stageTone = stageStyle(stageLabel);
+      }
     }
     const next = isRetainer
       ? `Deliver month ${cur} videos`
