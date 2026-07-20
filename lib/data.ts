@@ -9,6 +9,7 @@ import {
   toDateInputValue,
   isTaskDone,
   isRecurring,
+  isMonthTaskListComplete,
   clientTypeLabel,
   TASK_STATUS_STYLE,
   DELIV_STATUS,
@@ -48,6 +49,30 @@ async function repairOrphanedMonthlyVideos() {
   }
 }
 
+// One-time self-heal for a past bug: nothing ever advanced currentMonth
+// automatically, so a client whose month was already fully complete
+// before that logic existed stays stuck showing the finished month
+// forever. Safe to call on every request — a no-op once caught up.
+async function repairStuckMonths() {
+  const clients = await prisma.client.findMany({ where: { type: { in: ["RETAINER", "REPEAT"] } } });
+  for (const c of clients) {
+    let month = c.currentMonth || 1;
+    const total = c.totalMonths || 6;
+    const defs = c.type === "REPEAT" ? REPEAT_TASK_DEFS : RETAINER_TASK_DEFS;
+    let advanced = false;
+    while (month < total) {
+      const tasks = await prisma.task.findMany({ where: { clientCode: c.code, scopeKey: `m${month}` } });
+      const statusMap = new Map(tasks.map((t) => [t.taskId, t.status]));
+      if (!isMonthTaskListComplete(defs, statusMap)) break;
+      month++;
+      advanced = true;
+    }
+    if (advanced) {
+      await prisma.client.update({ where: { code: c.code }, data: { currentMonth: month } });
+    }
+  }
+}
+
 export async function getCompanyOrder(): Promise<string[]> {
   const clients = await prisma.client.findMany({ orderBy: { createdAt: "asc" }, select: { code: true } });
   const codes = clients.map((c) => c.code);
@@ -72,6 +97,7 @@ function shortLabel(stage: string) {
 
 export async function listDashboardClients() {
   await repairOrphanedMonthlyVideos();
+  await repairStuckMonths();
   const clients = await prisma.client.findMany({ orderBy: { createdAt: "asc" } });
   const allVideos = await prisma.video.findMany();
 
@@ -448,6 +474,7 @@ const CONTRACTS_FALLBACK: Record<string, { plan: string }> = {};
 
 export async function getClientDetail(code: string) {
   await repairOrphanedMonthlyVideos();
+  await repairStuckMonths();
   const clients = await prisma.client.findMany({ orderBy: { createdAt: "asc" } });
   const client = clients.find((c) => c.code === code) || clients[0];
   if (!client) return null;

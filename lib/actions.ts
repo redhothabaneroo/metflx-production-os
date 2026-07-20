@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "./db";
-import { VIDEO_TITLES, PROMO_STAGE_OPTIONS, RETAINER_STAGE_OPTIONS, RETAINER_TASK_DEFS, REPEAT_TASK_DEFS, isRecurring, isTaskDone } from "./business";
+import { VIDEO_TITLES, PROMO_STAGE_OPTIONS, RETAINER_STAGE_OPTIONS, RETAINER_TASK_DEFS, REPEAT_TASK_DEFS, isRecurring, isMonthTaskListComplete } from "./business";
 
 // Once every task in a retainer/repeat client's current month is done,
 // move them into the next month automatically — nothing else in this app
@@ -20,9 +20,8 @@ async function maybeAdvanceMonth(clientCode: string, scopeKey: string) {
   const defs = client.type === "REPEAT" ? REPEAT_TASK_DEFS : RETAINER_TASK_DEFS;
   const tasks = await prisma.task.findMany({ where: { clientCode, scopeKey } });
   const statusMap = new Map(tasks.map((t) => [t.taskId, t.status]));
-  const allDone = defs.every((d) => isTaskDone(statusMap.get(d.id) || "Not started"));
 
-  if (allDone) {
+  if (isMonthTaskListComplete(defs, statusMap)) {
     await prisma.client.update({ where: { code: clientCode }, data: { currentMonth: month + 1 } });
   }
 }

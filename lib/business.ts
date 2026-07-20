@@ -21,6 +21,10 @@ export function isTaskDone(status: string) {
   return status === "Complete" || status === "Not applicable";
 }
 
+export function isMonthTaskListComplete(defs: { id: string }[], statusMap: Map<string, string>) {
+  return defs.every((d) => isTaskDone(statusMap.get(d.id) || "Not started"));
+}
+
 export const TASK_STATUS_STYLE: Record<string, { bg: string; fg: string; dot: string; border: string }> = {
   "Not started": { bg: "#eef0f3", fg: "#7b828c", dot: "#aeb4bd", border: "#e0e3e8" },
   "In progress": { bg: "#eef1fd", fg: "#3754db", dot: "#3754db", border: "#d4ddfb" },
