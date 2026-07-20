@@ -2,7 +2,30 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "./db";
-import { VIDEO_TITLES, PROMO_STAGE_OPTIONS, RETAINER_STAGE_OPTIONS, isRecurring } from "./business";
+import { VIDEO_TITLES, PROMO_STAGE_OPTIONS, RETAINER_STAGE_OPTIONS, RETAINER_TASK_DEFS, REPEAT_TASK_DEFS, isRecurring, isTaskDone } from "./business";
+
+// Once every task in a retainer/repeat client's current month is done,
+// move them into the next month automatically — nothing else in this app
+// ever advances currentMonth, so it would otherwise stay frozen forever.
+async function maybeAdvanceMonth(clientCode: string, scopeKey: string) {
+  const monthMatch = scopeKey.match(/^m(\d+)$/);
+  if (!monthMatch) return;
+  const month = parseInt(monthMatch[1], 10);
+
+  const client = await prisma.client.findUnique({ where: { code: clientCode } });
+  if (!client || !isRecurring(client.type)) return;
+  if ((client.currentMonth || 1) !== month) return;
+  if (month >= (client.totalMonths || 6)) return;
+
+  const defs = client.type === "REPEAT" ? REPEAT_TASK_DEFS : RETAINER_TASK_DEFS;
+  const tasks = await prisma.task.findMany({ where: { clientCode, scopeKey } });
+  const statusMap = new Map(tasks.map((t) => [t.taskId, t.status]));
+  const allDone = defs.every((d) => isTaskDone(statusMap.get(d.id) || "Not started"));
+
+  if (allDone) {
+    await prisma.client.update({ where: { code: clientCode }, data: { currentMonth: month + 1 } });
+  }
+}
 
 function revalidateAll() {
   revalidatePath("/dashboard");
@@ -149,9 +172,11 @@ export async function updateTaskStatus(clientCode: string, scopeKey: string, tas
     update: { status },
     create: { clientCode, scopeKey, taskId, status },
   });
+  await maybeAdvanceMonth(clientCode, scopeKey);
   revalidatePath("/detail/" + clientCode);
   revalidatePath("/clients");
   revalidatePath("/schedule");
+  revalidatePath("/dashboard");
 }
 
 export async function updateTaskOwner(clientCode: string, scopeKey: string, taskId: string, owner: string) {
