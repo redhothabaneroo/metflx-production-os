@@ -219,10 +219,27 @@ export default function KanbanBoard({ columns, children }: { columns: Columns; c
                       {b.monthShow && (
                         <span style={{ fontFamily: MONO, fontSize: 9, background: "#e9f6ee", color: "#15803d", borderRadius: 4, padding: "2px 6px", flexShrink: 0 }}>M{b.month}</span>
                       )}
-                      {b.dueDate && (
-                        <span style={{ marginLeft: "auto", fontFamily: MONO, fontSize: 9, background: "#fdf3e7", color: "#b45309", borderRadius: 4, padding: "2px 6px", flexShrink: 0 }}>Due {b.dueDate}</span>
+                      {col.stage === "On Queue" ? (
+                        <span
+                          style={{
+                            marginLeft: "auto",
+                            fontFamily: MONO,
+                            fontSize: 9,
+                            background: b.shootDate ? "#eef1fd" : "#f1f3f6",
+                            color: b.shootDate ? "#3754db" : "#9aa1aa",
+                            borderRadius: 4,
+                            padding: "2px 6px",
+                            flexShrink: 0,
+                          }}
+                        >
+                          {b.shootDate ? `Shoot ${b.shootDate}` : "Not yet Booked"}
+                        </span>
+                      ) : (
+                        b.dueDate && (
+                          <span style={{ marginLeft: "auto", fontFamily: MONO, fontSize: 9, background: "#fdf3e7", color: "#b45309", borderRadius: 4, padding: "2px 6px", flexShrink: 0 }}>Due {b.dueDate}</span>
+                        )
                       )}
-                      <span style={{ marginLeft: b.dueDate ? 0 : "auto", fontFamily: MONO, fontSize: 11, color: "#5b6470", background: "#f1f3f6", borderRadius: 5, padding: "1px 7px", flexShrink: 0, transition: "background-color 200ms ease" }}>
+                      <span style={{ marginLeft: b.dueDate || col.stage === "On Queue" ? 0 : "auto", fontFamily: MONO, fontSize: 11, color: "#5b6470", background: "#f1f3f6", borderRadius: 5, padding: "1px 7px", flexShrink: 0, transition: "background-color 200ms ease" }}>
                         {b.count}
                       </span>
                     </div>
@@ -287,8 +304,24 @@ export default function KanbanBoard({ columns, children }: { columns: Columns; c
                             {v.crShow && (
                               <span style={{ fontFamily: MONO, fontSize: 9, background: "#fdf3e7", color: "#b45309", borderRadius: 4, padding: "2px 5px", flexShrink: 0 }}>CR{v.cr}</span>
                             )}
-                            {v.dueDate && (
-                              <span style={{ fontFamily: MONO, fontSize: 9, background: "#fdf3e7", color: "#b45309", borderRadius: 4, padding: "2px 5px", flexShrink: 0 }}>Due {v.dueDate}</span>
+                            {col.stage === "On Queue" ? (
+                              <span
+                                style={{
+                                  fontFamily: MONO,
+                                  fontSize: 9,
+                                  background: v.shootDate ? "#eef1fd" : "#f1f3f6",
+                                  color: v.shootDate ? "#3754db" : "#9aa1aa",
+                                  borderRadius: 4,
+                                  padding: "2px 5px",
+                                  flexShrink: 0,
+                                }}
+                              >
+                                {v.shootDate ? `Shoot ${v.shootDate}` : "Not yet Booked"}
+                              </span>
+                            ) : (
+                              v.dueDate && (
+                                <span style={{ fontFamily: MONO, fontSize: 9, background: "#fdf3e7", color: "#b45309", borderRadius: 4, padding: "2px 5px", flexShrink: 0 }}>Due {v.dueDate}</span>
+                              )
                             )}
                           </div>
                         );

@@ -191,10 +191,16 @@ export async function listKanbanBoard() {
   const shootDates = await prisma.shootDate.findMany();
   const shootDateMap = new Map(shootDates.map((s) => [`${s.clientCode}:${s.scopeKey}`, s.date]));
 
-  const dueDateFor = (clientCode: string, month: number | null) => {
+  const rawShootDateFor = (clientCode: string, month: number | null) => {
     const client = clientMap.get(clientCode);
-    const shootDate = month == null ? shootDateMap.get(`${clientCode}:main`) || client?.shootDate || null : shootDateMap.get(`${clientCode}:m${month}`) || null;
-    const due = addBusinessDays(shootDate, 10);
+    return month == null ? shootDateMap.get(`${clientCode}:main`) || client?.shootDate || null : shootDateMap.get(`${clientCode}:m${month}`) || null;
+  };
+  const shootDateFor = (clientCode: string, month: number | null) => {
+    const d = rawShootDateFor(clientCode, month);
+    return d ? fmtDateShort(d) : null;
+  };
+  const dueDateFor = (clientCode: string, month: number | null) => {
+    const due = addBusinessDays(rawShootDateFor(clientCode, month), 10);
     return due ? fmtDateShort(due) : null;
   };
 
@@ -211,6 +217,8 @@ export async function listKanbanBoard() {
         const singleMonth = months.size === 1 ? [...months][0] : null;
         const bucketDueDates = new Set(cvs.map((v) => dueDateFor(code, v.month)).filter((d) => d != null));
         const bucketDueDate = bucketDueDates.size === 1 ? [...bucketDueDates][0] : null;
+        const bucketShootDates = new Set(cvs.map((v) => shootDateFor(code, v.month)).filter((d) => d != null));
+        const bucketShootDate = bucketShootDates.size === 1 ? [...bucketShootDates][0] : null;
         return {
           code,
           name: client.name,
@@ -222,6 +230,7 @@ export async function listKanbanBoard() {
           monthShow: singleMonth != null,
           month: singleMonth,
           dueDate: bucketDueDate,
+          shootDate: bucketShootDate,
           videos: cvs.map((v) => ({
             id: v.id,
             clientCode: code,
@@ -235,6 +244,7 @@ export async function listKanbanBoard() {
             crShow: v.cr > 0,
             accent: t.fg,
             dueDate: dueDateFor(code, v.month),
+            shootDate: shootDateFor(code, v.month),
           })),
         };
       });
