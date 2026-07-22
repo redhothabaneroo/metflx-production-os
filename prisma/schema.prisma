@@ -91,11 +91,12 @@ model CustomTask {
 }
 
 model ShootDate {
-  id         Int      @id @default(autoincrement())
-  clientCode String
-  client     Client   @relation(fields: [clientCode], references: [code], onDelete: Cascade)
-  scopeKey   String
-  date       DateTime
+  id            Int      @id @default(autoincrement())
+  clientCode    String
+  client        Client   @relation(fields: [clientCode], references: [code], onDelete: Cascade)
+  scopeKey      String
+  date          DateTime?
+  notApplicable Boolean  @default(false)
 
   @@unique([clientCode, scopeKey])
   @@map("shoot_dates")

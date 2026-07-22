@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import TaskRow from "./TaskRow";
-import { updateShootDate } from "@/lib/actions";
+import { updateShootDate, setDateNotApplicable } from "@/lib/actions";
 import { isTaskDone } from "@/lib/business";
 import type { getClientDetail } from "@/lib/data";
 
@@ -10,6 +10,57 @@ const MONO = "'IBM Plex Mono', monospace";
 
 type Detail = NonNullable<Awaited<ReturnType<typeof getClientDetail>>>;
 type Section = Detail["monthSections"][number];
+
+function DateFieldRow({
+  label,
+  value,
+  notApplicable,
+  onChangeDate,
+  onToggleNotApplicable,
+}: {
+  label: string;
+  value: string;
+  notApplicable?: boolean;
+  onChangeDate: (value: string) => void;
+  onToggleNotApplicable?: (value: boolean) => void;
+}) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 10, background: "#fafbfc", border: "1px solid #eef0f3", borderRadius: 9, padding: "10px 12px" }}>
+      <div style={{ fontFamily: MONO, fontSize: 9, textTransform: "uppercase", letterSpacing: ".08em", color: "#9aa1aa" }}>{label}</div>
+      {notApplicable ? (
+        <span style={{ font: "600 12.5px 'IBM Plex Sans'", color: "#9aa1aa" }}>Not applicable</span>
+      ) : (
+        <input
+          type="date"
+          defaultValue={value}
+          onChange={(e) => onChangeDate(e.target.value)}
+          style={{ font: "600 12.5px 'IBM Plex Sans'", color: value ? "#1a1d21" : "#9aa1aa", border: "1px solid #dde1e6", borderRadius: 7, padding: "6px 9px", background: "#fff" }}
+        />
+      )}
+      {onToggleNotApplicable && (
+        <button
+          onClick={() => onToggleNotApplicable(!notApplicable)}
+          style={{
+            marginLeft: "auto",
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            border: `1px solid ${notApplicable ? "#3754db" : "#dde1e6"}`,
+            background: notApplicable ? "#eef1fd" : "#fff",
+            color: notApplicable ? "#3754db" : "#5b6470",
+            borderRadius: 7,
+            padding: "5px 10px",
+            cursor: "pointer",
+            font: "600 11px 'IBM Plex Sans'",
+            flexShrink: 0,
+          }}
+        >
+          {notApplicable ? "Mark applicable" : "N/A"}
+        </button>
+      )}
+    </div>
+  );
+}
 
 export default function MonthSection({ clientCode, section }: { clientCode: string; section: Section }) {
   const [expanded, setExpanded] = useState(section.defaultOpen);
@@ -37,14 +88,22 @@ export default function MonthSection({ clientCode, section }: { clientCode: stri
 
       {expanded && (
         <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 16 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, background: "#fafbfc", border: "1px solid #eef0f3", borderRadius: 9, padding: "10px 12px" }}>
-            <div style={{ fontFamily: MONO, fontSize: 9, textTransform: "uppercase", letterSpacing: ".08em", color: "#9aa1aa" }}>Shoot date</div>
-            <input
-              type="date"
-              defaultValue={section.shootDate}
-              onChange={(e) => startTransition(() => updateShootDate(clientCode, scopeKey, e.target.value))}
-              style={{ font: "600 12.5px 'IBM Plex Sans'", color: section.shootDate ? "#1a1d21" : "#9aa1aa", border: "1px solid #dde1e6", borderRadius: 7, padding: "6px 9px", background: "#fff" }}
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <DateFieldRow
+              label="Discovery call date"
+              value={section.discoveryDate}
+              notApplicable={section.discoveryNotApplicable}
+              onChangeDate={(value) => startTransition(() => updateShootDate(clientCode, `${scopeKey}-discovery`, value))}
+              onToggleNotApplicable={(value) => startTransition(() => setDateNotApplicable(clientCode, `${scopeKey}-discovery`, value))}
             />
+            <DateFieldRow
+              label="Content plan approval date"
+              value={section.approvalDate}
+              notApplicable={section.approvalNotApplicable}
+              onChangeDate={(value) => startTransition(() => updateShootDate(clientCode, `${scopeKey}-approval`, value))}
+              onToggleNotApplicable={(value) => startTransition(() => setDateNotApplicable(clientCode, `${scopeKey}-approval`, value))}
+            />
+            <DateFieldRow label="Shoot date" value={section.shootDate} onChangeDate={(value) => startTransition(() => updateShootDate(clientCode, scopeKey, value))} />
           </div>
 
           <div>

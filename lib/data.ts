@@ -320,7 +320,7 @@ export async function listLifecycleLanes() {
 
 export async function listSchedule() {
   const clients = await prisma.client.findMany();
-  const shootDates = await prisma.shootDate.findMany();
+  const shootDates = (await prisma.shootDate.findMany({ where: { date: { not: null } } })).filter((s) => s.scopeKey === "main" || /^m\d+$/.test(s.scopeKey));
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -361,7 +361,7 @@ export async function listSchedule() {
     const monthMatch = sd.scopeKey.match(/^m(\d+)$/);
     const label = monthMatch ? `Month ${monthMatch[1]} shoot` : "Shoot";
     addEvent(sd.date, client.name, label, "shoot");
-    if (sd.date >= monday && sd.date <= new Date(monday.getTime() + 6 * 86400000)) tallyCrew(client.code, sd.scopeKey);
+    if (sd.date! >= monday && sd.date! <= new Date(monday.getTime() + 6 * 86400000)) tallyCrew(client.code, sd.scopeKey);
     const due = addBusinessDays(sd.date, 10);
     addEvent(due, client.name, "Deliverables due", "deadline");
   }
@@ -414,7 +414,7 @@ export async function listSchedule() {
 
 export async function listUpcoming() {
   const clients = await prisma.client.findMany();
-  const shootDates = await prisma.shootDate.findMany();
+  const shootDates = (await prisma.shootDate.findMany({ where: { date: { not: null } } })).filter((s) => s.scopeKey === "main" || /^m\d+$/.test(s.scopeKey));
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -431,7 +431,7 @@ export async function listUpcoming() {
     if (!client) continue;
     const monthMatch = sd.scopeKey.match(/^m(\d+)$/);
     const label = monthMatch ? `Month ${monthMatch[1]} shoot` : "Shoot day";
-    if (sd.date >= today) items.push({ code: client.code, name: client.name, date: sd.date, title: client.name, sub: label, kind: "shoot" });
+    if (sd.date! >= today) items.push({ code: client.code, name: client.name, date: sd.date!, title: client.name, sub: label, kind: "shoot" });
     const due = addBusinessDays(sd.date, 10);
     if (due && due >= today) items.push({ code: client.code, name: client.name, date: due, title: client.name, sub: "Deliverables due", kind: "deadline" });
   }
@@ -505,7 +505,7 @@ export async function getClientDetail(code: string) {
   const shootDates = await prisma.shootDate.findMany({ where: { clientCode: code } });
 
   const taskStatusMap = new Map(tasks.map((t) => [`${t.scopeKey}:${t.taskId}`, t]));
-  const shootDateMap = new Map(shootDates.map((s) => [s.scopeKey, s.date]));
+  const shootDateMap = new Map(shootDates.map((s) => [s.scopeKey, s]));
 
   const vOrder: string[] = [...PIPELINE_STAGES];
   const stageIdxMap: Record<string, number> = { Onboarding: -1, "Raw upload": 0, Packaging: 1, Editing: 2, "Internal review": 3, "Client review": 4, "Final delivery": 5 };
@@ -558,7 +558,7 @@ export async function getClientDetail(code: string) {
       };
     });
 
-  const shootDateMain = shootDateMap.get("main") || client.shootDate || null;
+  const shootDateMain = shootDateMap.get("main")?.date || client.shootDate || null;
   const dueMain = addBusinessDays(shootDateMain, 10);
 
   const onboarding = ONBOARDING_TASK_DEFS.map((t) => {
@@ -638,8 +638,10 @@ export async function getClientDetail(code: string) {
     const allRetainerVideos = await prisma.video.findMany({ where: { clientCode: code, month: { not: null } }, orderBy: [{ month: "asc" }, { num: "asc" }] });
     return Array.from({ length: totalMo }, (_, i) => i + 1).map((mo) => {
       const scopeKey = `m${mo}`;
-      const moShootDate = shootDateMap.get(scopeKey) || null;
+      const moShootDate = shootDateMap.get(scopeKey)?.date || null;
       const moDue = addBusinessDays(moShootDate, 10);
+      const discoveryRow = shootDateMap.get(`${scopeKey}-discovery`);
+      const approvalRow = shootDateMap.get(`${scopeKey}-approval`);
       const moCurForDefault = mo < curMo ? 99 : 0;
       const moTasks = buildTaskList(monthlyTaskDefs, scopeKey, moCurForDefault);
       const moDone = moTasks.filter((t) => isTaskStatusDone(t.status)).length;
@@ -659,6 +661,10 @@ export async function getClientDetail(code: string) {
         isComplete,
         defaultOpen: mo === curMo,
         shootDate: toDateInputValue(moShootDate),
+        discoveryDate: toDateInputValue(discoveryRow?.date || null),
+        discoveryNotApplicable: discoveryRow?.notApplicable || false,
+        approvalDate: toDateInputValue(approvalRow?.date || null),
+        approvalNotApplicable: approvalRow?.notApplicable || false,
         tasks: moTasks,
         tasksDone: moDone,
         tasksTotal: moTasks.length,

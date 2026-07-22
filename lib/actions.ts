@@ -206,12 +206,25 @@ export async function updateShootDate(clientCode: string, scopeKey: string, date
   } else {
     await prisma.shootDate.upsert({
       where: { clientCode_scopeKey: { clientCode, scopeKey } },
-      update: { date: new Date(date + "T00:00:00") },
+      update: { date: new Date(date + "T00:00:00"), notApplicable: false },
       create: { clientCode, scopeKey, date: new Date(date + "T00:00:00") },
     });
   }
   revalidatePath("/detail/" + clientCode);
   revalidatePath("/schedule");
+}
+
+export async function setDateNotApplicable(clientCode: string, scopeKey: string, notApplicable: boolean) {
+  if (notApplicable) {
+    await prisma.shootDate.upsert({
+      where: { clientCode_scopeKey: { clientCode, scopeKey } },
+      update: { notApplicable: true, date: null },
+      create: { clientCode, scopeKey, notApplicable: true, date: null },
+    });
+  } else {
+    await prisma.shootDate.deleteMany({ where: { clientCode, scopeKey } });
+  }
+  revalidatePath("/detail/" + clientCode);
 }
 
 export async function updateClientInfo(
