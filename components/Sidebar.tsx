@@ -241,10 +241,10 @@ export default function Sidebar() {
             flexShrink: 0,
           }}
         >
-          PR
+          TR
         </div>
         {!collapsed && (
-          <div style={{ fontSize: 12, color: "#cbd0d8", whiteSpace: "nowrap" }}>Priya · Producer</div>
+          <div style={{ fontSize: 12, color: "#cbd0d8", whiteSpace: "nowrap" }}>Trixy · Producer</div>
         )}
       </div>
     </aside>

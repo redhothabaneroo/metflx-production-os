@@ -49,6 +49,13 @@ async function repairOrphanedMonthlyVideos() {
   }
 }
 
+// One-time self-heal: "Priya" is no longer a team member — renamed to
+// "Trixy" in the seed script and default client owner, but that doesn't
+// retroactively fix clients already created with the old name.
+async function repairPriyaOwner() {
+  await prisma.client.updateMany({ where: { owner: "Priya" }, data: { owner: "Trixy" } });
+}
+
 // One-time self-heal for a past bug: nothing ever advanced currentMonth
 // automatically, so a client whose month was already fully complete
 // before that logic existed stays stuck showing the finished month
@@ -98,6 +105,7 @@ function shortLabel(stage: string) {
 export async function listDashboardClients() {
   await repairOrphanedMonthlyVideos();
   await repairStuckMonths();
+  await repairPriyaOwner();
   const clients = await prisma.client.findMany({ orderBy: { createdAt: "asc" } });
   const allVideos = await prisma.video.findMany();
 
@@ -475,6 +483,7 @@ const CONTRACTS_FALLBACK: Record<string, { plan: string }> = {};
 export async function getClientDetail(code: string) {
   await repairOrphanedMonthlyVideos();
   await repairStuckMonths();
+  await repairPriyaOwner();
   const clients = await prisma.client.findMany({ orderBy: { createdAt: "asc" } });
   const client = clients.find((c) => c.code === code) || clients[0];
   if (!client) return null;

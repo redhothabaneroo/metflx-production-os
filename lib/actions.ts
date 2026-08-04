@@ -65,7 +65,7 @@ export async function createClient(input: {
       code,
       name: business,
       type,
-      owner: "Priya",
+      owner: "Trixy",
       stage: "Onboarding",
       lane: "Onboarding",
       note: "New client — onboarding just started.",

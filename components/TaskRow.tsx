@@ -112,6 +112,8 @@ export default function TaskRow({
               textDecorationColor: "#c7d0e8",
             }}
           >
+            <option value="Nikko">Nikko</option>
+            <option value="Trixy">Trixy</option>
             <option value="Thomas">Thomas</option>
             <option value="Brody">Brody</option>
           </select>

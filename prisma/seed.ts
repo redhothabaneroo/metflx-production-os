@@ -31,12 +31,12 @@ const CLIENTS: Array<{
   currentMonth?: number;
   shootDate?: Date;
 }> = [
-  { code: "LN", name: "Little Naples", type: "RETAINER", owner: "Priya", stage: "In production", lane: "Onboarding" },
-  { code: "IC", name: "ICAA Law", type: "RETAINER", owner: "Priya", stage: "In production", lane: "Onboarding" },
-  { code: "GR", name: "Grinta", type: "RETAINER", owner: "Priya", stage: "In production", lane: "Onboarding" },
-  { code: "OL", name: "Othman Lawyers", type: "RETAINER", owner: "Priya", stage: "In production", lane: "Onboarding" },
-  { code: "MC", name: "Mimi & Co", type: "RETAINER", owner: "Priya", stage: "In production", lane: "Onboarding" },
-  { code: "PZ", name: "Promaz", type: "RETAINER", owner: "Priya", stage: "In production", lane: "Onboarding" },
+  { code: "LN", name: "Little Naples", type: "RETAINER", owner: "Trixy", stage: "In production", lane: "Onboarding" },
+  { code: "IC", name: "ICAA Law", type: "RETAINER", owner: "Trixy", stage: "In production", lane: "Onboarding" },
+  { code: "GR", name: "Grinta", type: "RETAINER", owner: "Trixy", stage: "In production", lane: "Onboarding" },
+  { code: "OL", name: "Othman Lawyers", type: "RETAINER", owner: "Trixy", stage: "In production", lane: "Onboarding" },
+  { code: "MC", name: "Mimi & Co", type: "RETAINER", owner: "Trixy", stage: "In production", lane: "Onboarding" },
+  { code: "PZ", name: "Promaz", type: "RETAINER", owner: "Trixy", stage: "In production", lane: "Onboarding" },
   {
     code: "EC",
     name: "Extra Cloud",

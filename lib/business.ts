@@ -82,7 +82,6 @@ const AVATAR_MAP: Record<string, { bg: string; fg: string; initials: string }> =
   Nikko: { bg: "#ede0fb", fg: "#7c3aed", initials: "NI" },
   Maya: { bg: "#d9efe6", fg: "#0f766e", initials: "MA" },
   Jules: { bg: "#fde7d6", fg: "#b45309", initials: "JU" },
-  Priya: { bg: "#dfe8ff", fg: "#3754db", initials: "PR" },
   Nicole: { bg: "#ede0fb", fg: "#7c3aed", initials: "NC" },
   Utkarsh: { bg: "#e3eafe", fg: "#3754db", initials: "UT" },
   Trixy: { bg: "#fde7d6", fg: "#b45309", initials: "TR" },
@@ -195,7 +194,7 @@ export const MILESTONE_LABELS = [
   "Final delivery",
 ];
 
-export const TEAM_MEMBERS = ["Brody", "Trixy", "Nikko"];
+export const TEAM_MEMBERS = ["Brody", "Trixy", "Nikko", "Thomas"];
 
 export const VIDEO_TITLES = [
   "Hero film",
