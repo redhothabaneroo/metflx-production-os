@@ -206,6 +206,9 @@ function toneForStage(stage: string) {
 }
 
 export async function listClientOptions() {
+  await repairOrphanedMonthlyVideos();
+  await repairStuckMonths();
+  await repairPriyaOwner();
   const clients = await prisma.client.findMany({ orderBy: { createdAt: "asc" } });
   return clients.map((c) => ({
     code: c.code,
@@ -217,6 +220,9 @@ export async function listClientOptions() {
 }
 
 export async function listKanbanBoard() {
+  await repairOrphanedMonthlyVideos();
+  await repairStuckMonths();
+  await repairPriyaOwner();
   const companyOrder = await getCompanyOrder();
   const clients = await prisma.client.findMany();
   const clientMap = new Map(clients.map((c) => [c.code, c]));
@@ -289,6 +295,9 @@ export async function listKanbanBoard() {
 }
 
 export async function listLifecycleLanes() {
+  await repairOrphanedMonthlyVideos();
+  await repairStuckMonths();
+  await repairPriyaOwner();
   const LANES = [
     "Onboarding",
     "Discovery & Plan",
@@ -327,6 +336,9 @@ export async function listLifecycleLanes() {
 }
 
 export async function listSchedule() {
+  await repairOrphanedMonthlyVideos();
+  await repairStuckMonths();
+  await repairPriyaOwner();
   const clients = await prisma.client.findMany();
   const shootDates = (await prisma.shootDate.findMany({ where: { date: { not: null } } })).filter((s) => s.scopeKey === "main" || /^m\d+$/.test(s.scopeKey));
 
@@ -421,6 +433,9 @@ export async function listSchedule() {
 }
 
 export async function listUpcoming() {
+  await repairOrphanedMonthlyVideos();
+  await repairStuckMonths();
+  await repairPriyaOwner();
   const clients = await prisma.client.findMany();
   const shootDates = (await prisma.shootDate.findMany({ where: { date: { not: null } } })).filter((s) => s.scopeKey === "main" || /^m\d+$/.test(s.scopeKey));
   const today = new Date();
@@ -466,6 +481,8 @@ export async function listUpcoming() {
 }
 
 export async function listActiveEditsCount() {
+  await repairOrphanedMonthlyVideos();
+  await repairStuckMonths();
   const videos = await prisma.video.findMany({
     where: { stage: { not: "On Queue" } },
     include: { client: { select: { type: true, currentMonth: true } } },
@@ -741,6 +758,8 @@ const PROMO_STATUS_OPTIONS = ["Not started", "In progress", "Complete", "Pending
 const RETAINER_STATUS_OPTIONS = ["Not started", "In progress", "Complete", "Not applicable", "Pending"];
 
 export async function getTeamBoard(member: string) {
+  await repairOrphanedMonthlyVideos();
+  await repairStuckMonths();
   const clients = await prisma.client.findMany({ orderBy: { createdAt: "asc" } });
   const av = avatar(member);
 
