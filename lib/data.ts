@@ -56,6 +56,13 @@ async function repairPriyaOwner() {
   await prisma.client.updateMany({ where: { owner: "Priya" }, data: { owner: "Trixy" } });
 }
 
+// One-time self-heal: "Jules" is no longer a team member — every client
+// still owned or edited by Jules transfers to Nikko.
+async function repairJulesAssignments() {
+  await prisma.client.updateMany({ where: { owner: "Jules" }, data: { owner: "Nikko" } });
+  await prisma.client.updateMany({ where: { editor: "Jules" }, data: { editor: "Nikko" } });
+}
+
 // One-time self-heal for a past bug: nothing ever advanced currentMonth
 // automatically, so a client whose month was already fully complete
 // before that logic existed stays stuck showing the finished month
@@ -106,6 +113,7 @@ export async function listDashboardClients() {
   await repairOrphanedMonthlyVideos();
   await repairStuckMonths();
   await repairPriyaOwner();
+  await repairJulesAssignments();
   const clients = await prisma.client.findMany({ orderBy: { createdAt: "asc" } });
   const allVideos = await prisma.video.findMany();
 
@@ -209,6 +217,7 @@ export async function listClientOptions() {
   await repairOrphanedMonthlyVideos();
   await repairStuckMonths();
   await repairPriyaOwner();
+  await repairJulesAssignments();
   const clients = await prisma.client.findMany({ orderBy: { createdAt: "asc" } });
   return clients.map((c) => ({
     code: c.code,
@@ -223,6 +232,7 @@ export async function listKanbanBoard() {
   await repairOrphanedMonthlyVideos();
   await repairStuckMonths();
   await repairPriyaOwner();
+  await repairJulesAssignments();
   const companyOrder = await getCompanyOrder();
   const clients = await prisma.client.findMany();
   const clientMap = new Map(clients.map((c) => [c.code, c]));
@@ -298,6 +308,7 @@ export async function listLifecycleLanes() {
   await repairOrphanedMonthlyVideos();
   await repairStuckMonths();
   await repairPriyaOwner();
+  await repairJulesAssignments();
   const LANES = [
     "Onboarding",
     "Discovery & Plan",
@@ -339,6 +350,7 @@ export async function listSchedule() {
   await repairOrphanedMonthlyVideos();
   await repairStuckMonths();
   await repairPriyaOwner();
+  await repairJulesAssignments();
   const clients = await prisma.client.findMany();
   const shootDates = (await prisma.shootDate.findMany({ where: { date: { not: null } } })).filter((s) => s.scopeKey === "main" || /^m\d+$/.test(s.scopeKey));
 
@@ -436,6 +448,7 @@ export async function listUpcoming() {
   await repairOrphanedMonthlyVideos();
   await repairStuckMonths();
   await repairPriyaOwner();
+  await repairJulesAssignments();
   const clients = await prisma.client.findMany();
   const shootDates = (await prisma.shootDate.findMany({ where: { date: { not: null } } })).filter((s) => s.scopeKey === "main" || /^m\d+$/.test(s.scopeKey));
   const today = new Date();
@@ -501,6 +514,7 @@ export async function getClientDetail(code: string) {
   await repairOrphanedMonthlyVideos();
   await repairStuckMonths();
   await repairPriyaOwner();
+  await repairJulesAssignments();
   const clients = await prisma.client.findMany({ orderBy: { createdAt: "asc" } });
   const client = clients.find((c) => c.code === code) || clients[0];
   if (!client) return null;
