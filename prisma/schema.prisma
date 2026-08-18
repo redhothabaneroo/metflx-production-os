@@ -1,0 +1,103 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ClientType {
+  RETAINER
+  PROMO
+  REPEAT
+}
+
+model Client {
+  code             String    @id
+  name             String
+  type             ClientType
+  owner            String
+  editor           String?
+  stage            String    @default("Onboarding")
+  lane             String    @default("Onboarding")
+  note             String?
+  contact          String?
+  email            String?
+  plan             String?
+  contractStart    DateTime?
+  contractEnd      DateTime?
+  videosPerMonth   Int?
+  currentMonth     Int?
+  totalMonths      Int       @default(6)
+  shootDate        DateTime?
+  rawFolderLink    String?
+  frameIoLink      String?
+  finalDeliveryLink String?
+  createdAt        DateTime  @default(now())
+
+  videos      Video[]
+  tasks       Task[]
+  shootDates  ShootDate[]
+  customTasks CustomTask[]
+
+  @@map("clients")
+}
+
+model Video {
+  id         Int      @id @default(autoincrement())
+  clientCode String
+  client     Client   @relation(fields: [clientCode], references: [code], onDelete: Cascade)
+  code       String   @unique
+  title      String?
+  stage      String
+  month      Int?
+  num        Int?
+  ir         Int      @default(0)
+  cr         Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  @@map("videos")
+}
+
+model Task {
+  id         Int      @id @default(autoincrement())
+  clientCode String
+  client     Client   @relation(fields: [clientCode], references: [code], onDelete: Cascade)
+  scopeKey   String
+  taskId     String
+  status     String
+  owner      String?
+  dueDate    DateTime?
+
+  @@unique([clientCode, scopeKey, taskId])
+  @@map("tasks")
+}
+
+model CustomTask {
+  id         Int      @id @default(autoincrement())
+  clientCode String
+  client     Client   @relation(fields: [clientCode], references: [code], onDelete: Cascade)
+  label      String
+  owner      String
+  status     String   @default("Not started")
+  dueDate    DateTime?
+  createdAt  DateTime @default(now())
+
+  @@map("custom_tasks")
+}
+
+model ShootDate {
+  id            Int      @id @default(autoincrement())
+  clientCode    String
+  client        Client   @relation(fields: [clientCode], references: [code], onDelete: Cascade)
+  scopeKey      String
+  date          DateTime?
+  notApplicable Boolean  @default(false)
+
+  @@unique([clientCode, scopeKey])
+  @@map("shoot_dates")
+}

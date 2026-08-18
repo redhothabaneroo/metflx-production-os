@@ -1,0 +1,1567 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; height: 100%; }
+  body { font-family: 'IBM Plex Sans', system-ui, sans-serif; background: #eef0f3; color: #1a1d21; -webkit-font-smoothing: antialiased; }
+  ::-webkit-scrollbar { height: 10px; width: 10px; }
+  ::-webkit-scrollbar-thumb { background: #d3d7dd; border-radius: 6px; border: 2px solid transparent; background-clip: padding-box; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  @keyframes fadeup { from { transform: translateY(6px); } to { transform: none; } }
+</style>
+</helmet>
+
+<div style="display:flex;height:100vh;width:100%;overflow:hidden">
+
+  <!-- TOAST -->
+  <sc-if value="{{ toast }}" hint-placeholder-val="{{ false }}">
+    <div style="position:fixed;bottom:26px;left:50%;transform:translateX(-50%);z-index:60;display:flex;align-items:center;gap:14px;background:#1a1d21;color:#fff;border-radius:11px;padding:13px 16px 13px 18px;box-shadow:0 12px 32px rgba(10,10,10,0.3);animation:fadeup .3s ease-out">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="#16a34a" style="flex-shrink:0"><circle cx="12" cy="12" r="11"/><path d="M17 9l-6 6-3-3" stroke="#fff" stroke-width="2.4" fill="none"/></svg>
+      <span style="font-size:13px;font-weight:500;white-space:nowrap">{{ toast.message }}</span>
+      <button onClick="{{ toast.onView }}" style="border:none;background:#2b2f36;color:#fff;font:600 12px 'IBM Plex Sans';border-radius:7px;padding:7px 12px;cursor:pointer;white-space:nowrap">View</button>
+      <button onClick="{{ toast.onDismiss }}" style="border:none;background:transparent;color:#8a9099;cursor:pointer;font-size:14px;line-height:1;padding:2px">✕</button>
+    </div>
+  </sc-if>
+
+  <!-- SIDEBAR -->
+  <aside style="width:{{ sb.width }};flex-shrink:0;background:#15181d;color:#cbd0d8;display:flex;flex-direction:column;padding:18px {{ sb.padX }};transition:width 250ms cubic-bezier(0.22,1,0.36,1)">
+    <div style="display:flex;align-items:center;gap:10px;padding:6px 8px 14px;justify-content:{{ sb.navJustify }}">
+      <div style="width:30px;height:30px;border-radius:7px;background:#3754db;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:15px;flex-shrink:0">M</div>
+      <div style="display:{{ sb.labelDisplay }};min-width:0">
+        <div style="font-weight:600;font-size:14px;color:#fff;letter-spacing:-.01em;white-space:nowrap">Acme Studio</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:#6b7280;white-space:nowrap">Production OS</div>
+      </div>
+    </div>
+
+    <button onClick="{{ sb.toggle }}" style="display:flex;align-items:center;justify-content:{{ sb.navJustify }};gap:10px;margin:0 0 8px;padding:8px 11px;border:none;border-radius:8px;cursor:pointer;background:transparent;color:#6b7280">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="transform:rotate({{ sb.chevronRot }});transition:transform 250ms cubic-bezier(0.22,1,0.36,1);flex-shrink:0"><path d="m15 18-6-6 6-6"/></svg>
+      <span style="display:{{ sb.labelDisplay }};font:500 12px 'IBM Plex Sans';white-space:nowrap">Collapse</span>
+    </button>
+
+    <nav style="display:flex;flex-direction:column;gap:2px;margin-top:4px">
+      <button onClick="{{ nav.goDash }}" style="display:flex;align-items:center;gap:11px;padding:9px 11px;border:none;border-radius:8px;cursor:pointer;font:500 13px 'IBM Plex Sans';text-align:left;background:{{ nav.dashBg }};color:{{ nav.dashFg }};justify-content:{{ sb.navJustify }}">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+        <span style="display:{{ sb.labelDisplay }};white-space:nowrap">Dashboard</span>
+      </button>
+      <button onClick="{{ nav.goEdits }}" style="display:flex;align-items:center;gap:11px;padding:9px 11px;border:none;border-radius:8px;cursor:pointer;font:500 13px 'IBM Plex Sans';text-align:left;background:{{ nav.editsBg }};color:{{ nav.editsFg }};justify-content:{{ sb.navJustify }}">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><rect x="2" y="3" width="20" height="18" rx="2"/><path d="M7 3v18M17 3v18M2 9h5M2 15h5M17 9h5M17 15h5"/></svg>
+        <span style="display:{{ sb.labelDisplay }};white-space:nowrap">Video Pipeline</span>
+      </button>
+      <button onClick="{{ nav.goSched }}" style="display:flex;align-items:center;gap:11px;padding:9px 11px;border:none;border-radius:8px;cursor:pointer;font:500 13px 'IBM Plex Sans';text-align:left;background:{{ nav.schedBg }};color:{{ nav.schedFg }};justify-content:{{ sb.navJustify }}">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>
+        <span style="display:{{ sb.labelDisplay }};white-space:nowrap">Shoot Schedule</span>
+      </button>
+      <button onClick="{{ nav.goPipe }}" style="display:flex;align-items:center;gap:11px;padding:9px 11px;border:none;border-radius:8px;cursor:pointer;font:500 13px 'IBM Plex Sans';text-align:left;background:{{ nav.pipeBg }};color:{{ nav.pipeFg }};justify-content:{{ sb.navJustify }}">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><rect x="3" y="4" width="5" height="16"/><rect x="10" y="4" width="5" height="11"/><rect x="17" y="4" width="4" height="14"/></svg>
+        <span style="display:{{ sb.labelDisplay }};white-space:nowrap">Client Pipeline</span>
+      </button>
+      <button onClick="{{ nav.goDetail }}" style="display:flex;align-items:center;gap:11px;padding:9px 11px;border:none;border-radius:8px;cursor:pointer;font:500 13px 'IBM Plex Sans';text-align:left;background:{{ nav.detailBg }};color:{{ nav.detailFg }};justify-content:{{ sb.navJustify }}">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+        <span style="display:{{ sb.labelDisplay }};white-space:nowrap">Project Detail</span>
+      </button>
+    </nav>
+
+    <div style="margin-top:auto;padding:11px;border-top:1px solid #262b33;display:flex;align-items:center;gap:9px;justify-content:{{ sb.navJustify }}">
+      <div style="width:26px;height:26px;border-radius:50%;background:#3754db;color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0">JO</div>
+      <div style="font-size:12px;color:#cbd0d8;display:{{ sb.labelDisplay }};white-space:nowrap">Jordan · Producer</div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div style="flex:1;display:flex;flex-direction:column;min-width:0">
+
+    <!-- TOPBAR -->
+    <header style="height:60px;flex-shrink:0;background:#fff;border-bottom:1px solid #e3e6ea;display:flex;align-items:center;gap:18px;padding:0 26px">
+      <div>
+        <div style="font-size:16px;font-weight:600;letter-spacing:-.01em">{{ pageTitle }}</div>
+        <div style="font-size:11.5px;color:#8a9099">{{ pageSub }}</div>
+      </div>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:8px;background:#f1f3f6;border:1px solid #e3e6ea;border-radius:8px;padding:8px 12px;width:260px;color:#9aa1aa">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4-4"/></svg>
+        <span style="font-size:12.5px">Search clients, edits…</span>
+      </div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8a9099;letter-spacing:.04em">TUE · JUN 24</div>
+    </header>
+
+    <!-- SCROLL AREA -->
+    <main style="flex:1;overflow-y:auto;padding:24px 26px 60px">
+
+      <!-- ===================== ADD CLIENT MODAL ===================== -->
+      <sc-if value="{{ addClient.show }}" hint-placeholder-val="{{ false }}">
+      <div style="position:fixed;inset:0;background:rgba(15,18,22,0.42);z-index:50;display:flex;align-items:flex-start;justify-content:center;padding:60px 20px;overflow-y:auto" onClick="{{ addClient.close }}">
+        <div onClick="{{ addClient.stop }}" style="background:#fff;border-radius:16px;width:100%;max-width:520px;box-shadow:0 20px 60px rgba(10,10,10,0.28);animation:fadeup .3s ease-out">
+          <div style="display:flex;align-items:center;padding:20px 22px;border-bottom:1px solid #eef0f3">
+            <div>
+              <div style="font-size:16px;font-weight:700;letter-spacing:-.01em">Add a new client</div>
+              <div style="font-size:12px;color:#8a9099;margin-top:2px">Create the client folder and onboarding record</div>
+            </div>
+            <button onClick="{{ addClient.close }}" style="margin-left:auto;width:30px;height:30px;border:none;background:#f1f3f6;border-radius:8px;cursor:pointer;color:#6b7280;font-size:16px;line-height:1">✕</button>
+          </div>
+
+          <div style="padding:20px 22px;display:flex;flex-direction:column;gap:16px">
+            <div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:#9aa1aa;margin-bottom:7px">Client type</div>
+              <div style="display:flex;gap:8px">
+                <button onClick="{{ addClient.setType.retainer }}" style="flex:1;border:1px solid #e3e6ea;border-radius:9px;padding:10px;cursor:pointer;font:600 12.5px 'IBM Plex Sans';background:{{ addClient.typeRetainerBg }};color:{{ addClient.typeRetainerFg }}">Retainer</button>
+                <button onClick="{{ addClient.setType.promo }}" style="flex:1;border:1px solid #e3e6ea;border-radius:9px;padding:10px;cursor:pointer;font:600 12.5px 'IBM Plex Sans';background:{{ addClient.typePromoBg }};color:{{ addClient.typePromoFg }}">Promo</button>
+              </div>
+            </div>
+
+            <div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:#9aa1aa;margin-bottom:6px">Business name</div>
+              <input value="{{ addClient.form.business }}" onInput="{{ addClient.setField.business }}" placeholder="e.g. Lumen Fitness" style="width:100%;border:1px solid #dde1e6;border-radius:9px;padding:11px 12px;font:400 13px 'IBM Plex Sans';color:#1a1d21;outline:none;box-sizing:border-box" />
+            </div>
+
+            <div style="display:flex;gap:14px">
+              <div style="flex:1;min-width:0">
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:#9aa1aa;margin-bottom:6px">Contact name</div>
+                <input value="{{ addClient.form.contact }}" onInput="{{ addClient.setField.contact }}" placeholder="e.g. Jordan Webb" style="width:100%;border:1px solid #dde1e6;border-radius:9px;padding:11px 12px;font:400 13px 'IBM Plex Sans';color:#1a1d21;outline:none;box-sizing:border-box" />
+              </div>
+              <div style="flex:1;min-width:0">
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:#9aa1aa;margin-bottom:6px">Email address</div>
+                <input value="{{ addClient.form.email }}" onInput="{{ addClient.setField.email }}" placeholder="name@business.com" style="width:100%;border:1px solid #dde1e6;border-radius:9px;padding:11px 12px;font:400 13px 'IBM Plex Sans';color:#1a1d21;outline:none;box-sizing:border-box" />
+              </div>
+            </div>
+
+            <div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:#9aa1aa;margin-bottom:6px">Videos per month</div>
+              <input type="number" min="1" max="30" value="{{ addClient.form.videos }}" onInput="{{ addClient.setField.videos }}" placeholder="e.g. 8" style="width:100%;border:1px solid #dde1e6;border-radius:9px;padding:11px 12px;font:400 13px 'IBM Plex Sans';color:#1a1d21;outline:none;box-sizing:border-box" />
+            </div>
+
+            <div style="display:flex;gap:14px">
+              <div style="flex:1;min-width:0">
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:#9aa1aa;margin-bottom:6px">Contract start date</div>
+                <input type="date" value="{{ addClient.form.start }}" onInput="{{ addClient.setField.start }}" style="width:100%;border:1px solid #dde1e6;border-radius:9px;padding:11px 12px;font:400 13px 'IBM Plex Sans';color:#1a1d21;outline:none;box-sizing:border-box" />
+              </div>
+              <div style="flex:1;min-width:0">
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:#9aa1aa;margin-bottom:6px">{{ addClient.endLabel }}</div>
+                <input type="date" value="{{ addClient.form.end }}" onInput="{{ addClient.setField.end }}" style="width:100%;border:1px solid #dde1e6;border-radius:9px;padding:11px 12px;font:400 13px 'IBM Plex Sans';color:#1a1d21;outline:none;box-sizing:border-box" />
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:10px;padding:16px 22px;border-top:1px solid #eef0f3;background:#fafbfc;border-radius:0 0 16px 16px">
+            <button onClick="{{ addClient.close }}" style="margin-left:auto;border:1px solid #dde1e6;background:#fff;color:#5b6470;border-radius:9px;padding:10px 18px;cursor:pointer;font:600 12.5px 'IBM Plex Sans'">Cancel</button>
+            <button onClick="{{ addClient.save }}" disabled="{{ addClient.saveDisabled }}" style="border:none;background:{{ addClient.saveBg }};color:#fff;border-radius:9px;padding:10px 20px;cursor:{{ addClient.saveCursor }};font:600 12.5px 'IBM Plex Sans'">Create client</button>
+          </div>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ===================== ADD VIDEOS MODAL ===================== -->
+      <sc-if value="{{ addVideos.show }}" hint-placeholder-val="{{ false }}">
+      <div style="position:fixed;inset:0;background:rgba(15,18,22,0.42);z-index:50;display:flex;align-items:flex-start;justify-content:center;padding:60px 20px;overflow-y:auto" onClick="{{ addVideos.close }}">
+        <div onClick="{{ addVideos.stop }}" style="background:#fff;border-radius:16px;width:100%;max-width:460px;box-shadow:0 20px 60px rgba(10,10,10,0.28);animation:fadeup .3s ease-out">
+          <div style="display:flex;align-items:center;padding:20px 22px;border-bottom:1px solid #eef0f3">
+            <div>
+              <div style="font-size:16px;font-weight:700;letter-spacing:-.01em">Add Videos</div>
+              <div style="font-size:12px;color:#8a9099;margin-top:2px">Create deliverable cards for a client</div>
+            </div>
+            <button onClick="{{ addVideos.close }}" style="margin-left:auto;width:30px;height:30px;border:none;background:#f1f3f6;border-radius:8px;cursor:pointer;color:#6b7280;font-size:16px;line-height:1">✕</button>
+          </div>
+
+          <div style="padding:20px 22px;display:flex;flex-direction:column;gap:16px">
+            <div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:#9aa1aa;margin-bottom:6px">Client</div>
+              <select value="{{ addVideos.form.client }}" onChange="{{ addVideos.setClient }}" style="width:100%;border:1px solid #dde1e6;border-radius:9px;padding:11px 12px;font:500 13px 'IBM Plex Sans';color:#1a1d21;outline:none;box-sizing:border-box;background:#fff">
+                <option value="">Select a client…</option>
+                <sc-for list="{{ addVideos.clientOptions }}" as="co" hint-placeholder-count="8">
+                  <option value="{{ co.code }}">{{ co.label }}</option>
+                </sc-for>
+              </select>
+            </div>
+
+            <sc-if value="{{ addVideos.showRest }}" hint-placeholder-val="{{ false }}">
+            <div style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;background:{{ addVideos.typeBg }};color:{{ addVideos.typeFg }};border-radius:6px;padding:6px 10px;width:fit-content;text-transform:uppercase;letter-spacing:.06em">{{ addVideos.typeLabel }}</div>
+
+            <div style="display:flex;gap:14px">
+              <div style="flex:1;min-width:0">
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:#9aa1aa;margin-bottom:6px">Number of videos</div>
+                <input type="number" min="1" max="30" value="{{ addVideos.form.count }}" onInput="{{ addVideos.setCount }}" placeholder="e.g. 5" style="width:100%;border:1px solid #dde1e6;border-radius:9px;padding:11px 12px;font:400 13px 'IBM Plex Sans';color:#1a1d21;outline:none;box-sizing:border-box" />
+              </div>
+              <sc-if value="{{ addVideos.isRetainer }}" hint-placeholder-val="{{ false }}">
+                <div style="flex:1;min-width:0">
+                  <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:#9aa1aa;margin-bottom:6px">Month</div>
+                  <select value="{{ addVideos.form.month }}" onChange="{{ addVideos.setMonth }}" style="width:100%;border:1px solid #dde1e6;border-radius:9px;padding:11px 12px;font:500 13px 'IBM Plex Sans';color:#1a1d21;outline:none;box-sizing:border-box;background:#fff">
+                    <option value="1">Month 1</option>
+                    <option value="2">Month 2</option>
+                    <option value="3">Month 3</option>
+                    <option value="4">Month 4</option>
+                    <option value="5">Month 5</option>
+                    <option value="6">Month 6</option>
+                  </select>
+                </div>
+              </sc-if>
+            </div>
+
+            <div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:#9aa1aa;margin-bottom:6px">Stage</div>
+              <select value="{{ addVideos.form.stage }}" onChange="{{ addVideos.setStage }}" style="width:100%;border:1px solid #dde1e6;border-radius:9px;padding:11px 12px;font:500 13px 'IBM Plex Sans';color:#1a1d21;outline:none;box-sizing:border-box;background:#fff">
+                <sc-for list="{{ addVideos.stageOptions }}" as="so" hint-placeholder-count="7">
+                  <option value="{{ so }}">{{ so }}</option>
+                </sc-for>
+              </select>
+            </div>
+            </sc-if>
+          </div>
+
+          <div style="display:flex;gap:10px;padding:16px 22px;border-top:1px solid #eef0f3;background:#fafbfc;border-radius:0 0 16px 16px">
+            <button onClick="{{ addVideos.close }}" style="margin-left:auto;border:1px solid #dde1e6;background:#fff;color:#5b6470;border-radius:9px;padding:10px 18px;cursor:pointer;font:600 12.5px 'IBM Plex Sans'">Cancel</button>
+            <button onClick="{{ addVideos.save }}" disabled="{{ addVideos.saveDisabled }}" style="border:none;background:{{ addVideos.saveBg }};color:#fff;border-radius:9px;padding:10px 20px;cursor:{{ addVideos.saveCursor }};font:600 12.5px 'IBM Plex Sans'">Add videos</button>
+          </div>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ===================== DASHBOARD ===================== -->
+      <sc-if value="{{ isDash }}" hint-placeholder-val="{{ true }}">
+      <div style="max-width:1480px;margin:0 auto;animation:fadeup .4s ease-out;display:grid;grid-template-columns:minmax(0,1fr) 318px;gap:18px;align-items:start">
+
+        <div style="display:flex;flex-direction:column;gap:18px">
+
+          <!-- RETAINERS -->
+          <div style="background:#fff;border:1px solid #e3e6ea;border-radius:14px;padding:4px 0 6px">
+            <div style="display:flex;align-items:center;padding:16px 18px 12px">
+              <span style="width:9px;height:9px;border-radius:50%;background:#0f766e;margin-right:9px"></span>
+              <div style="font-size:14px;font-weight:600">Retainers</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#8a9099;margin-left:8px;text-transform:uppercase;letter-spacing:.07em">{{ retainerCount }} active</div>
+              <button onClick="{{ nav.goPipe }}" style="margin-left:auto;background:none;border:none;color:#3754db;font:500 12px 'IBM Plex Sans';cursor:pointer">Pipeline view →</button>
+            </div>
+            <div style="overflow-x:auto">
+            <div style="min-width:680px">
+            <div style="display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,0.85fr) minmax(0,1fr) minmax(0,1.55fr) minmax(0,1.4fr) minmax(0,0.95fr);gap:14px;padding:0 18px 9px">
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:#9aa1aa">Client</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:#9aa1aa">Month</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:#9aa1aa">Stage</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:#9aa1aa">Video edits</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:#9aa1aa">What's next</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:#9aa1aa">Status</div>
+            </div>
+            <sc-for list="{{ retainers }}" as="c" hint-placeholder-count="4">
+              <div onClick="{{ c.onOpen }}" style="border-top:1px solid #f1f3f6;padding:13px 18px;cursor:pointer">
+                <div style="display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,0.85fr) minmax(0,1fr) minmax(0,1.55fr) minmax(0,1.4fr) minmax(0,0.95fr);gap:14px;align-items:center">
+                  <div style="display:flex;align-items:center;gap:11px;min-width:0">
+                    <div style="width:32px;height:32px;border-radius:8px;background:{{ c.typeBg }};color:{{ c.typeFg }};display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;flex-shrink:0">{{ c.code }}</div>
+                    <div style="min-width:0">
+                      <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.name }}</div>
+                      <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.07em;text-transform:uppercase;color:{{ c.typeFg }};margin-top:1px">{{ c.type }}</div>
+                    </div>
+                  </div>
+                  <div style="min-width:0">
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:12.5px;font-weight:600">{{ c.monthLabel }}</div>
+                    <div style="height:4px;background:#eef0f3;border-radius:3px;margin-top:5px;overflow:hidden;max-width:70px"><div style="height:100%;width:{{ c.monthPct }};background:#0f766e;border-radius:3px"></div></div>
+                  </div>
+                  <div>
+                    <span style="font-size:11.5px;font-weight:500;padding:4px 10px;border-radius:6px;background:{{ c.stageBg }};color:{{ c.stageFg }};white-space:nowrap">{{ c.stage }}</span>
+                  </div>
+                  <div style="min-width:0">
+                    <sc-if value="{{ c.hasEdits }}" hint-placeholder-val="{{ true }}">
+                      <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:5px"><span style="font-size:14px;font-weight:700">{{ c.total }}</span><span style="font-size:11px;color:#8a9099">videos</span></div>
+                      <div style="display:flex;flex-wrap:wrap;gap:4px 11px">
+                        <sc-for list="{{ c.dist }}" as="d" hint-placeholder-count="2"><span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;color:#5b6470"><span style="width:7px;height:7px;border-radius:50%;background:{{ d.color }};flex-shrink:0"></span>{{ d.count }} {{ d.short }}</span></sc-for>
+                      </div>
+                    </sc-if>
+                    <sc-if value="{{ c.noEdits }}" hint-placeholder-val="{{ false }}"><span style="font-size:12px;color:#9aa1aa">No edits yet</span></sc-if>
+                  </div>
+                  <div style="min-width:0">
+                    <div style="font-size:12.5px;line-height:1.3">{{ c.next }}</div>
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;margin-top:3px;color:{{ c.nextColor }}">{{ c.nextDate }}</div>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:8px;min-width:0">
+                    <span style="display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:500;padding:4px 9px;border-radius:6px;background:{{ c.statusBg }};color:{{ c.statusFg }};white-space:nowrap"><span style="width:6px;height:6px;border-radius:50%;background:{{ c.statusDot }}"></span>{{ c.statusLabel }}</span>
+                    <svg style="margin-left:auto;flex-shrink:0" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#c4c9d0" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+                  </div>
+                </div>
+                <div style="display:flex;align-items:flex-start;gap:7px;margin-top:9px;padding-left:43px">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#b6bcc4" stroke-width="2" style="flex-shrink:0;margin-top:2px"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                  <span style="font-size:11.5px;color:#7b828c;line-height:1.4">{{ c.note }}</span>
+                </div>
+              </div>
+            </sc-for>
+            </div>
+            </div>
+          </div>
+
+          <!-- PROMO -->
+          <div style="background:#fff;border:1px solid #e3e6ea;border-radius:14px;padding:4px 0 6px">
+            <div style="display:flex;align-items:center;padding:16px 18px 12px">
+              <span style="width:9px;height:9px;border-radius:50%;background:#3754db;margin-right:9px"></span>
+              <div style="font-size:14px;font-weight:600">Promo</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#8a9099;margin-left:8px;text-transform:uppercase;letter-spacing:.07em">{{ promoCount }} active</div>
+            </div>
+            <div style="overflow-x:auto">
+            <div style="min-width:640px">
+            <div style="display:grid;grid-template-columns:minmax(0,1.85fr) minmax(0,1fr) minmax(0,1.6fr) minmax(0,1.5fr) minmax(0,0.95fr);gap:14px;padding:0 18px 9px">
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:#9aa1aa">Client</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:#9aa1aa">Stage</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:#9aa1aa">Video edits</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:#9aa1aa">What's next</div>
+              <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:#9aa1aa">Status</div>
+            </div>
+            <sc-for list="{{ promos }}" as="c" hint-placeholder-count="5">
+              <div onClick="{{ c.onOpen }}" style="border-top:1px solid #f1f3f6;padding:13px 18px;cursor:pointer">
+                <div style="display:grid;grid-template-columns:minmax(0,1.85fr) minmax(0,1fr) minmax(0,1.6fr) minmax(0,1.5fr) minmax(0,0.95fr);gap:14px;align-items:center">
+                  <div style="display:flex;align-items:center;gap:11px;min-width:0">
+                    <div style="width:32px;height:32px;border-radius:8px;background:{{ c.typeBg }};color:{{ c.typeFg }};display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;flex-shrink:0">{{ c.code }}</div>
+                    <div style="min-width:0">
+                      <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.name }}</div>
+                      <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.07em;text-transform:uppercase;color:{{ c.typeFg }};margin-top:1px">{{ c.type }}</div>
+                    </div>
+                  </div>
+                  <div>
+                    <span style="font-size:11.5px;font-weight:500;padding:4px 10px;border-radius:6px;background:{{ c.stageBg }};color:{{ c.stageFg }};white-space:nowrap">{{ c.stage }}</span>
+                  </div>
+                  <div style="min-width:0">
+                    <sc-if value="{{ c.hasEdits }}" hint-placeholder-val="{{ true }}">
+                      <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:5px"><span style="font-size:14px;font-weight:700">{{ c.total }}</span><span style="font-size:11px;color:#8a9099">videos</span></div>
+                      <div style="display:flex;flex-wrap:wrap;gap:4px 11px">
+                        <sc-for list="{{ c.dist }}" as="d" hint-placeholder-count="2"><span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;color:#5b6470"><span style="width:7px;height:7px;border-radius:50%;background:{{ d.color }};flex-shrink:0"></span>{{ d.count }} {{ d.short }}</span></sc-for>
+                      </div>
+                    </sc-if>
+                    <sc-if value="{{ c.noEdits }}" hint-placeholder-val="{{ false }}"><span style="font-size:12px;color:#9aa1aa">No edits yet</span></sc-if>
+                  </div>
+                  <div style="min-width:0">
+                    <div style="font-size:12.5px;line-height:1.3">{{ c.next }}</div>
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;margin-top:3px;color:{{ c.nextColor }}">{{ c.nextDate }}</div>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:8px;min-width:0">
+                    <span style="display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:500;padding:4px 9px;border-radius:6px;background:{{ c.statusBg }};color:{{ c.statusFg }};white-space:nowrap"><span style="width:6px;height:6px;border-radius:50%;background:{{ c.statusDot }}"></span>{{ c.statusLabel }}</span>
+                    <svg style="margin-left:auto;flex-shrink:0" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#c4c9d0" stroke-width="2"><path d="m9 18 6-6-6-6"/></svg>
+                  </div>
+                </div>
+                <div style="display:flex;align-items:flex-start;gap:7px;margin-top:9px;padding-left:43px">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#b6bcc4" stroke-width="2" style="flex-shrink:0;margin-top:2px"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                  <span style="font-size:11.5px;color:#7b828c;line-height:1.4">{{ c.note }}</span>
+                </div>
+              </div>
+            </sc-for>
+            </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT RAIL: upcoming shoots & meetings -->
+        <aside style="background:#fff;border:1px solid #e3e6ea;border-radius:14px;padding:18px 16px 8px;position:sticky;top:0">
+          <div style="display:flex;align-items:center;margin-bottom:14px;padding:0 2px">
+            <div style="font-size:14px;font-weight:600">Upcoming</div>
+            <button onClick="{{ nav.goSched }}" style="margin-left:auto;background:none;border:none;color:#3754db;font:500 12px 'IBM Plex Sans';cursor:pointer">Schedule →</button>
+          </div>
+          <div style="display:flex;gap:14px;margin-bottom:14px;padding:0 2px;font-size:10.5px;color:#6b7280">
+            <span style="display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:2px;background:#3754db"></span>Shoot</span>
+            <span style="display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:2px;background:#7c3aed"></span>Meeting</span>
+            <span style="display:flex;align-items:center;gap:5px"><span style="width:8px;height:8px;border-radius:2px;background:#d97706"></span>Deadline</span>
+          </div>
+          <sc-for list="{{ upcoming }}" as="u" hint-placeholder-count="6">
+            <div onClick="{{ u.onOpen }}" style="display:flex;gap:11px;padding:10px 2px;border-top:1px solid #f1f3f6;cursor:pointer">
+              <div style="text-align:center;width:34px;flex-shrink:0">
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;text-transform:uppercase;color:#9aa1aa;letter-spacing:.05em">{{ u.day }}</div>
+                <div style="font-size:16px;font-weight:600;line-height:1.1">{{ u.dnum }}</div>
+              </div>
+              <div style="width:3px;border-radius:2px;background:{{ u.accent }};flex-shrink:0"></div>
+              <div style="flex:1;min-width:0">
+                <div style="display:flex;align-items:center;gap:6px">
+                  <span style="font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ u.title }}</span>
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:.05em;text-transform:uppercase;padding:2px 5px;border-radius:4px;background:{{ u.bg }};color:{{ u.accent }};flex-shrink:0">{{ u.kindLabel }}</span>
+                </div>
+                <div style="font-size:11px;color:#8a9099;margin-top:2px">{{ u.sub }}</div>
+                <div style="font-size:10.5px;color:#aeb4bd;margin-top:2px">{{ u.who }}</div>
+              </div>
+            </div>
+          </sc-for>
+          <div style="height:6px"></div>
+        </aside>
+      </div>
+      </sc-if>
+
+      <!-- ===================== EDIT TRACKER ===================== -->
+      <sc-if value="{{ isEdits }}" hint-placeholder-val="{{ false }}">
+      <div style="animation:fadeup .4s ease-out">
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap">
+          <div style="font-size:12.5px;color:#5b6470;max-width:620px">Columns are post-production stages. Click a company to expand its edits. Click cards to select, then drag any selected card to move one or many to another stage at once.</div>
+          <button onClick="{{ addVideos.open }}" style="display:flex;align-items:center;gap:7px;border:none;background:#1a1d21;color:#fff;border-radius:8px;padding:9px 14px;cursor:pointer;font:600 12.5px 'IBM Plex Sans'">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
+            Add Videos
+          </button>
+          <div style="margin-left:auto;display:flex;gap:14px;font-size:11px;color:#6b7280">
+            <span style="display:flex;align-items:center;gap:6px"><span style="width:9px;height:9px;border-radius:50%;background:#3754db"></span>Promo</span>
+            <span style="display:flex;align-items:center;gap:6px"><span style="width:9px;height:9px;border-radius:50%;background:#0f766e"></span>Retainer</span>
+          </div>
+        </div>
+        <sc-if value="{{ hasSelection }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;background:#eef1fd;border:1px solid #d4ddfb;border-radius:10px;padding:9px 14px">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="#3754db"><circle cx="12" cy="12" r="11"/><path d="M17 9l-6 6-3-3" stroke="#fff" stroke-width="2.4" fill="none"/></svg>
+            <span style="font-size:12.5px;font-weight:600;color:#23306e">{{ selectedCount }} selected</span>
+            <span style="font-size:12px;color:#4a5578">Drag any selected card to move them together.</span>
+            <button onClick="{{ clearSel }}" style="margin-left:auto;background:#fff;border:1px solid #c9d3f5;color:#3754db;font:500 12px 'IBM Plex Sans';border-radius:7px;padding:6px 12px;cursor:pointer">Clear selection</button>
+          </div>
+        </sc-if>
+
+        <div style="display:flex;gap:14px;overflow-x:auto;padding-bottom:14px">
+          <sc-for list="{{ trackerColumns }}" as="col" hint-placeholder-count="6">
+            <div style="width:286px;flex-shrink:0">
+              <div style="display:flex;align-items:center;gap:8px;padding:0 4px 10px">
+                <div style="width:9px;height:9px;border-radius:3px;background:{{ col.fg }}"></div>
+                <div style="font-size:12.5px;font-weight:600">{{ col.name }}</div>
+                <div style="margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#9aa1aa">{{ col.count }}</div>
+              </div>
+              <div onDrop="{{ col.onDrop }}" onDragOver="{{ col.onDragOver }}" style="min-height:260px;background:#fafbfc;border:1px dashed #e1e4e8;border-radius:12px;padding:9px;display:flex;flex-direction:column;gap:9px">
+                <sc-for list="{{ col.buckets }}" as="b" hint-placeholder-count="1">
+                  <div>
+                    <div draggable="true" onClick="{{ b.onToggle }}" onDragStart="{{ b.onGroupDragStart }}" onDragEnd="{{ b.onGroupDragEnd }}" style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:#fff;border:1px solid #e6e8ec;border-radius:9px;cursor:grab" title="Click to expand · drag to move the whole group">
+                      <span style="font-size:9px;color:#9aa1aa;width:8px;flex-shrink:0">{{ b.chevron }}</span>
+                      <span style="width:7px;height:7px;border-radius:50%;background:{{ b.dot }};flex-shrink:0"></span>
+                      <span style="font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ b.name }}</span>
+                      <sc-if value="{{ b.monthShow }}" hint-placeholder-val="{{ false }}"><span style="font-family:'IBM Plex Mono',monospace;font-size:9px;background:#e9f6ee;color:#15803d;border-radius:4px;padding:2px 6px;flex-shrink:0">M{{ b.month }}</span></sc-if>
+                      <span style="width:6px;height:6px;border-radius:50%;background:{{ b.noteDot }};flex-shrink:0" title="{{ b.note }}"></span>
+                      <span style="margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#5b6470;background:#f1f3f6;border-radius:5px;padding:1px 7px;flex-shrink:0">{{ b.count }}</span>
+                    </div>
+                    <sc-if value="{{ b.expanded }}" hint-placeholder-val="{{ true }}">
+                      <div style="display:flex;flex-direction:column;gap:7px;padding:8px 2px 2px">
+                        <sc-for list="{{ b.videos }}" as="v" hint-placeholder-count="2">
+                          <div draggable="true" onClick="{{ v.onSelect }}" onDragStart="{{ v.onDragStart }}" onDragEnd="{{ v.onDragEnd }}" style="display:flex;align-items:center;gap:9px;background:{{ v.cardBg }};border:1px solid {{ v.cardBorder }};border-left:3px solid {{ v.accent }};border-radius:9px;padding:9px 10px;cursor:grab" title="Click to select · drag to move">
+                            <sc-if value="{{ v.selected }}" hint-placeholder-val="{{ false }}"><svg width="13" height="13" viewBox="0 0 24 24" fill="#3754db" style="flex-shrink:0"><circle cx="12" cy="12" r="11"/><path d="M17 9l-6 6-3-3" stroke="#fff" stroke-width="2.4" fill="none"/></svg></sc-if>
+                            <sc-if value="{{ v.unselected }}" hint-placeholder-val="{{ true }}"><svg width="11" height="15" viewBox="0 0 24 24" fill="#c4c9d0" style="flex-shrink:0"><circle cx="9" cy="5" r="1.7"/><circle cx="15" cy="5" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="19" r="1.7"/><circle cx="15" cy="19" r="1.7"/></svg></sc-if>
+                            <span style="font-family:'IBM Plex Mono',monospace;font-size:11.5px;font-weight:600;color:#1a1d21;flex:1;min-width:0">{{ v.code }}</span>
+                            <sc-if value="{{ v.monthShow }}" hint-placeholder-val="{{ false }}"><span style="font-family:'IBM Plex Mono',monospace;font-size:9px;background:#e9f6ee;color:#15803d;border-radius:4px;padding:2px 5px;flex-shrink:0">M{{ v.month }}</span></sc-if>
+                            <sc-if value="{{ v.irShow }}" hint-placeholder-val="{{ false }}"><span style="font-family:'IBM Plex Mono',monospace;font-size:9px;background:#f1ecfd;color:#7c3aed;border-radius:4px;padding:2px 5px;flex-shrink:0">IR{{ v.ir }}</span></sc-if>
+                            <sc-if value="{{ v.crShow }}" hint-placeholder-val="{{ false }}"><span style="font-family:'IBM Plex Mono',monospace;font-size:9px;background:#fdf3e7;color:#b45309;border-radius:4px;padding:2px 5px;flex-shrink:0">CR{{ v.cr }}</span></sc-if>
+                          </div>
+                        </sc-for>
+                      </div>
+                    </sc-if>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ===================== SHOOT SCHEDULE ===================== -->
+      <sc-if value="{{ isSched }}" hint-placeholder-val="{{ false }}">
+      <div style="animation:fadeup .4s ease-out">
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <button style="width:28px;height:28px;border:1px solid #e3e6ea;background:#fff;border-radius:7px;cursor:pointer;color:#6b7280">‹</button>
+            <div style="font-size:14px;font-weight:600">Jun 23 – 29, 2026</div>
+            <button style="width:28px;height:28px;border:1px solid #e3e6ea;background:#fff;border-radius:7px;cursor:pointer;color:#6b7280">›</button>
+          </div>
+          <div style="display:flex;gap:6px;margin-left:8px">
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;background:#1a1d21;color:#fff;border-radius:6px;padding:6px 11px">Week</span>
+            <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;background:#fff;border:1px solid #e3e6ea;color:#6b7280;border-radius:6px;padding:6px 11px">Month</span>
+          </div>
+          <div style="margin-left:auto;display:flex;gap:14px;font-size:11px;color:#6b7280">
+            <span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:3px;background:#3754db"></span>Shoot</span>
+            <span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:3px;background:#7c3aed"></span>Meeting</span>
+            <span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:3px;background:#d97706"></span>Deadline</span>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 280px;gap:16px;align-items:start">
+          <div style="background:#fff;border:1px solid #e3e6ea;border-radius:14px;overflow:hidden">
+            <div style="display:grid;grid-template-columns:repeat(7,1fr)">
+              <sc-for list="{{ week }}" as="d" hint-placeholder-count="7">
+                <div style="border-right:1px solid #eef0f3;min-height:340px;background:{{ d.colBg }}">
+                  <div style="padding:11px 10px;border-bottom:1px solid #eef0f3;text-align:center">
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;letter-spacing:.07em;color:#8a9099">{{ d.dow }}</div>
+                    <div style="font-size:16px;font-weight:600;margin-top:2px;color:{{ d.numColor }}">{{ d.dnum }}</div>
+                  </div>
+                  <div style="padding:8px 7px;display:flex;flex-direction:column;gap:7px">
+                    <sc-for list="{{ d.events }}" as="ev" hint-placeholder-count="0">
+                      <div style="background:{{ ev.bg }};border-left:3px solid {{ ev.accent }};border-radius:6px;padding:7px 8px">
+                        <div style="font-size:11.5px;font-weight:600;color:{{ ev.fg }};line-height:1.2">{{ ev.title }}</div>
+                        <div style="font-size:10px;color:#7b828c;margin-top:2px">{{ ev.sub }}</div>
+                      </div>
+                    </sc-for>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+          <!-- side: needs booking -->
+          <div style="display:flex;flex-direction:column;gap:16px">
+            <div style="background:#fff;border:1px solid #e3e6ea;border-radius:14px;padding:18px">
+              <div style="font-size:14px;font-weight:600;margin-bottom:13px">Needs booking</div>
+              <div style="display:flex;flex-direction:column;gap:12px">
+                <sc-for list="{{ needsBooking }}" as="b" hint-placeholder-count="3">
+                  <div style="border:1px dashed #d3d7dd;border-radius:9px;padding:11px">
+                    <div style="display:flex;align-items:center;gap:7px;margin-bottom:4px">
+                      <span style="font-size:12.5px;font-weight:600">{{ b.client }}</span>
+                      <span style="margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.05em;padding:2px 6px;border-radius:4px;background:{{ b.kbg }};color:{{ b.kfg }}">{{ b.kind }}</span>
+                    </div>
+                    <div style="font-size:11px;color:#8a9099;margin-bottom:8px">{{ b.note }}</div>
+                    <button style="width:100%;background:#1a1d21;color:#fff;border:none;border-radius:7px;padding:7px;font:500 11.5px 'IBM Plex Sans';cursor:pointer">{{ b.cta }}</button>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+            <div style="background:#fff;border:1px solid #e3e6ea;border-radius:14px;padding:18px">
+              <div style="font-size:14px;font-weight:600;margin-bottom:11px">Crew this week</div>
+              <sc-for list="{{ crewLoad }}" as="c" hint-placeholder-count="2">
+                <div style="display:flex;align-items:center;gap:10px;padding:6px 0">
+                  <div style="width:26px;height:26px;border-radius:50%;background:{{ c.bg }};color:{{ c.fg }};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600">{{ c.initials }}</div>
+                  <span style="font-size:12.5px">{{ c.name }}</span>
+                  <span style="margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#6b7280">{{ c.count }} shoots</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ===================== CLIENT PIPELINE ===================== -->
+      <sc-if value="{{ isPipe }}" hint-placeholder-val="{{ false }}">
+      <div style="animation:fadeup .4s ease-out">
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
+          <div style="font-size:12px;color:#8a9099">Full client lifecycle, lead → live. Promo clients run the full path; retainers loop monthly from Content Plan.</div>
+          <div style="margin-left:auto;display:flex;gap:14px;font-size:11px;color:#6b7280">
+            <span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:3px;background:#3754db"></span>Promo</span>
+            <span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:3px;background:#0f766e"></span>Retainer</span>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:13px;overflow-x:auto;padding-bottom:14px">
+          <sc-for list="{{ pipeColumns }}" as="col" hint-placeholder-count="7">
+            <div style="width:230px;flex-shrink:0">
+              <div style="background:#e7eaef;border-radius:9px;padding:9px 12px;margin-bottom:10px">
+                <div style="display:flex;align-items:center;gap:7px">
+                  <div style="font-size:12px;font-weight:600">{{ col.name }}</div>
+                  <div style="margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#7b828c">{{ col.count }}</div>
+                </div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:9px">
+                <sc-for list="{{ col.items }}" as="c" hint-placeholder-count="1">
+                  <div onClick="{{ c.onOpen }}" style="background:#fff;border:1px solid #e3e6ea;border-radius:10px;padding:12px;cursor:pointer">
+                    <div style="display:flex;align-items:center;gap:6px;margin-bottom:7px">
+                      <div style="width:7px;height:7px;border-radius:50%;background:{{ c.typeFg }}"></div>
+                      <span style="font-size:12.5px;font-weight:600">{{ c.client }}</span>
+                    </div>
+                    <div style="font-size:11px;color:#7b828c;line-height:1.35;margin-bottom:9px">{{ c.note }}</div>
+                    <div style="display:flex;align-items:center;gap:7px">
+                      <div style="width:19px;height:19px;border-radius:50%;background:{{ c.ownerBg }};color:{{ c.ownerFg }};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600">{{ c.ownerInit }}</div>
+                      <span style="font-size:10.5px;color:#9aa1aa;margin-left:auto;font-family:'IBM Plex Mono',monospace">{{ c.next }}</span>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- ===================== PROJECT DETAIL ===================== -->
+      <sc-if value="{{ isDetail }}" hint-placeholder-val="{{ false }}">
+      <div style="max-width:1480px;margin:0 auto;animation:fadeup .4s ease-out;display:grid;grid-template-columns:230px minmax(0,1fr);gap:18px;align-items:start">
+
+        <!-- FOLDER MENU -->
+        <aside style="background:#fff;border:1px solid #e3e6ea;border-radius:14px;padding:14px 10px;position:sticky;top:0">
+          <button onClick="{{ addClient.open }}" style="display:flex;align-items:center;justify-content:center;gap:7px;width:100%;border:none;background:#1a1d21;color:#fff;border-radius:9px;padding:10px;cursor:pointer;font:600 12.5px 'IBM Plex Sans';margin-bottom:12px">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg>
+            Add a new client
+          </button>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;text-transform:uppercase;letter-spacing:.1em;color:#9aa1aa;padding:4px 8px 10px">Clients</div>
+          <sc-for list="{{ detailMenu }}" as="g" hint-placeholder-count="2">
+            <div style="margin-bottom:8px">
+              <div onClick="{{ g.onToggle }}" style="display:flex;align-items:center;gap:8px;padding:7px 8px;cursor:pointer">
+                <span style="font-size:9px;color:#aeb4bd;width:8px;flex-shrink:0">{{ g.chevron }}</span>
+                <span style="width:8px;height:8px;border-radius:50%;background:{{ g.dot }}"></span>
+                <span style="font-size:12px;font-weight:600">{{ g.label }}</span>
+                <span style="margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#aeb4bd">{{ g.count }}</span>
+              </div>
+              <sc-if value="{{ g.expanded }}" hint-placeholder-val="{{ true }}">
+              <sc-for list="{{ g.clients }}" as="c" hint-placeholder-count="4">
+                <button onClick="{{ c.onOpen }}" style="display:flex;align-items:center;gap:9px;width:100%;border:none;background:{{ c.rowBg }};border-radius:8px;padding:8px 8px 8px 12px;cursor:pointer;text-align:left;margin-bottom:1px">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#b6bcc4" stroke-width="2" style="flex-shrink:0"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+                  <span style="font-size:12.5px;font-weight:500;color:{{ c.nameFg }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1">{{ c.name }}</span>
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:600;padding:1px 5px;border-radius:4px;background:{{ c.badgeBg }};color:{{ c.badgeFg }};flex-shrink:0">{{ c.code }}</span>
+                </button>
+              </sc-for>
+              </sc-if>
+            </div>
+          </sc-for>
+        </aside>
+
+        <!-- DETAIL CONTENT -->
+        <div>
+        <!-- header -->
+        <div style="background:#fff;border:1px solid #e3e6ea;border-radius:14px;padding:20px 22px;margin-bottom:18px">
+          <div style="display:flex;align-items:flex-start;gap:14px">
+            <div>
+              <div style="display:flex;align-items:center;gap:10px">
+                <div style="font-size:20px;font-weight:700;letter-spacing:-.01em">{{ detail.name }}</div>
+                <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:5px;background:{{ detail.typeBg }};color:{{ detail.typeFg }}">{{ detail.type }}</span>
+              </div>
+              <div style="font-size:12.5px;color:#8a9099;margin-top:5px">{{ detail.metaLine }}</div>
+            </div>
+            <div style="margin-left:auto;display:flex;gap:26px">
+              <div><div style="font-family:'IBM Plex Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:#9aa1aa">Account</div><div style="font-size:13px;font-weight:600;margin-top:3px">{{ detail.account }}</div></div>
+              <div><div style="font-family:'IBM Plex Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:#9aa1aa">Editor</div><div style="font-size:13px;font-weight:600;margin-top:3px">{{ detail.editor }}</div></div>
+              <div><div style="font-family:'IBM Plex Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:#9aa1aa">Next milestone</div><div style="font-size:13px;font-weight:600;margin-top:3px;color:#b45309">{{ detail.nextMilestone }}</div></div>
+            </div>
+          </div>
+
+          <!-- timeline (horizontal, scrollable) -->
+          <div style="display:flex;align-items:flex-start;margin-top:22px;overflow-x:auto;padding-bottom:6px">
+            <sc-for list="{{ detail.timeline }}" as="t" hint-placeholder-count="14">
+              <div style="flex:0 0 92px;display:flex;flex-direction:column;align-items:center;position:relative">
+                <div style="position:absolute;top:8px;left:-50%;width:100%;height:2px;background:{{ t.leftLineBg }};z-index:0"></div>
+                <div style="width:17px;height:17px;border-radius:50%;background:{{ t.dotBg }};border:2px solid {{ t.dotBorder }};z-index:1;flex-shrink:0"></div>
+                <div style="font-size:10px;font-weight:{{ t.weight }};margin-top:8px;color:{{ t.fg }};text-align:center;line-height:1.2;padding:0 3px">{{ t.label }}</div>
+                <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;color:#9aa1aa;margin-top:3px">{{ t.date }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:18px;align-items:start">
+
+          <!-- left column: onboarding + tasks + deliverables -->
+          <div style="display:flex;flex-direction:column;gap:18px">
+          <!-- onboarding (promo only) -->
+          <sc-if value="{{ detail.onb.show }}" hint-placeholder-val="{{ false }}">
+          <div style="background:#fff;border:1px solid #e3e6ea;border-radius:14px;padding:18px">
+            <div onClick="{{ detail.onb.onToggle }}" style="display:flex;align-items:center;gap:10px;cursor:pointer">
+              <span style="font-size:11px;color:#9aa1aa;width:10px">{{ detail.onb.chevron }}</span>
+              <div style="font-size:14px;font-weight:600">Onboarding</div>
+              <sc-if value="{{ detail.onb.allComplete }}" hint-placeholder-val="{{ false }}">
+                <span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:#15803d;background:#e9f6ee;border-radius:20px;padding:3px 10px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>Complete</span>
+              </sc-if>
+              <span style="margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8a9099">{{ detail.onb.done }}/{{ detail.onb.total }}</span>
+            </div>
+            <sc-if value="{{ detail.onb.expanded }}" hint-placeholder-val="{{ true }}">
+              <div style="margin-top:6px">
+                <sc-for list="{{ detail.onb.tasks }}" as="t" hint-placeholder-count="8">
+                  <div style="display:flex;align-items:center;gap:12px;padding:11px 2px;border-top:1px solid #eef0f3">
+                    <div style="width:22px;height:22px;border-radius:50%;background:{{ t.ownerBg }};color:{{ t.ownerFg }};display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:600;flex-shrink:0">{{ t.ownerInit }}</div>
+                    <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:500">{{ t.label }}</div></div>
+                    <div style="position:relative;display:flex;align-items:center">
+                      <span style="position:absolute;left:11px;width:7px;height:7px;border-radius:50%;background:{{ t.statusDot }};pointer-events:none"></span>
+                      <select value="{{ t.status }}" onChange="{{ t.onSelect }}" style="appearance:none;-webkit-appearance:none;border:1px solid {{ t.statusBorder }};cursor:pointer;font:600 11px 'IBM Plex Sans';padding:6px 26px 6px 25px;border-radius:7px;background:{{ t.statusBg }};color:{{ t.statusFg }}">
+                        <option value="Not started">Not started</option>
+                        <option value="In progress">In progress</option>
+                        <option value="Complete">Complete</option>
+                        <option value="Pending">Pending</option>
+                      </select>
+                      <svg style="position:absolute;right:9px;pointer-events:none" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="{{ t.statusFg }}" stroke-width="2.4"><path d="m6 9 6 6 6-6"/></svg>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+          </div>
+          </sc-if>
+          <!-- tasks + deliverables (promo: flat) -->
+          <sc-if value="{{ detail.isPromo }}" hint-placeholder-val="{{ true }}">
+          <div style="background:#fff;border:1px solid #e3e6ea;border-radius:14px;padding:18px">
+            <div onClick="{{ detail.tasksSection.onToggle }}" style="display:flex;align-items:center;margin-bottom:6px;cursor:pointer">
+              <span style="font-size:11px;color:#9aa1aa;width:14px">{{ detail.tasksSection.chevron }}</span>
+              <div style="font-size:14px;font-weight:600">Tasks</div>
+              <div style="font-size:11.5px;color:#9aa1aa;margin-left:10px">Set a status for each step</div>
+              <span style="margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8a9099">{{ detail.tasksSection.done }}/{{ detail.tasksSection.total }}</span>
+            </div>
+            <sc-if value="{{ detail.tasksSection.expanded }}" hint-placeholder-val="{{ true }}">
+            <sc-for list="{{ detail.tasks }}" as="t" hint-placeholder-count="7">
+              <div style="display:flex;align-items:center;gap:12px;padding:11px 2px;border-top:1px solid #eef0f3">
+                <div style="width:22px;height:22px;border-radius:50%;background:{{ t.ownerBg }};color:{{ t.ownerFg }};display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:600;flex-shrink:0">{{ t.ownerInit }}</div>
+                <div style="flex:1;min-width:0">
+                  <div style="font-size:13px;font-weight:500">{{ t.label }}</div>
+                  <sc-if value="{{ t.ownerEditable }}" hint-placeholder-val="{{ false }}">
+                    <select value="{{ t.owner }}" onChange="{{ t.onOwnerSelect }}" style="appearance:none;-webkit-appearance:none;border:none;background:transparent;padding:0;cursor:pointer;font:500 11px 'IBM Plex Sans';color:#3754db;margin-top:1px;text-decoration:underline;text-decoration-color:#c7d0e8">
+                      <option value="Casey">Casey</option>
+                      <option value="Alex">Alex</option>
+                    </select>
+                  </sc-if>
+                  <sc-if value="{{ t.ownerNotEditable }}" hint-placeholder-val="{{ true }}">
+                    <div style="font-size:11px;color:#9aa1aa;margin-top:1px">{{ t.owner }}</div>
+                  </sc-if>
+                </div>
+                <div style="position:relative;display:flex;align-items:center">
+                  <span style="position:absolute;left:11px;width:7px;height:7px;border-radius:50%;background:{{ t.statusDot }};pointer-events:none"></span>
+                  <select value="{{ t.status }}" onChange="{{ t.onSelect }}" style="appearance:none;-webkit-appearance:none;border:1px solid {{ t.statusBorder }};cursor:pointer;font:600 11px 'IBM Plex Sans';padding:6px 26px 6px 25px;border-radius:7px;background:{{ t.statusBg }};color:{{ t.statusFg }}">
+                    <option value="Not started">Not started</option>
+                    <option value="In progress">In progress</option>
+                    <option value="Complete">Complete</option>
+                    <option value="Pending">Pending</option>
+                  </select>
+                  <svg style="position:absolute;right:9px;pointer-events:none" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="{{ t.statusFg }}" stroke-width="2.4"><path d="m6 9 6 6 6-6"/></svg>
+                </div>
+              </div>
+            </sc-for>
+            </sc-if>
+          </div>
+
+          <div style="background:#fff;border:1px solid #e3e6ea;border-radius:14px;padding:18px">
+            <div onClick="{{ detail.delivSection.onToggle }}" style="display:flex;align-items:center;margin-bottom:14px;cursor:pointer">
+              <span style="font-size:11px;color:#9aa1aa;width:14px">{{ detail.delivSection.chevron }}</span>
+              <div style="font-size:14px;font-weight:600">Deliverables</div>
+              <span style="margin-left:10px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8a9099">{{ detail.delivSection.done }}/{{ detail.delivSection.total }}</span>
+              <div style="margin-left:auto"></div>
+            </div>
+            <sc-if value="{{ detail.delivSection.expanded }}" hint-placeholder-val="{{ true }}">
+            <sc-if value="{{ detail.hasDeliverables }}" hint-placeholder-val="{{ true }}">
+              <sc-for list="{{ detail.deliverables }}" as="v" hint-placeholder-count="8">
+                <div style="display:flex;align-items:center;gap:12px;padding:11px 2px;border-top:1px solid #eef0f3">
+                  <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:#1a1d21;width:48px">{{ v.code }}</div>
+                  <div style="flex:1;min-width:0"></div>
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#7b828c;width:60px;text-align:right">{{ v.dueDate }}</span>
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.03em;padding:4px 9px;border-radius:6px;background:{{ v.statusBg }};color:{{ v.statusFg }};width:118px;text-align:center">{{ v.status }}</span>
+                </div>
+              </sc-for>
+            </sc-if>
+            <sc-if value="{{ detail.noDeliverables }}" hint-placeholder-val="{{ false }}">
+              <div style="padding:28px 8px;text-align:center;color:#9aa1aa;font-size:12.5px;border-top:1px solid #eef0f3">No video edits yet — still in onboarding / pre-production.</div>
+            </sc-if>
+            </sc-if>
+          </div>
+          </sc-if>
+
+          <!-- monthly sections (retainer only) -->
+          <sc-if value="{{ detail.isRetainerMonthly }}" hint-placeholder-val="{{ false }}">
+          <sc-for list="{{ detail.monthSections }}" as="ms" hint-placeholder-count="6">
+            <div style="background:#fff;border:1px solid #e3e6ea;border-radius:14px;padding:18px">
+              <div onClick="{{ ms.onToggleMonth }}" style="display:flex;align-items:center;gap:10px;cursor:pointer">
+                <span style="font-size:11px;color:#9aa1aa;width:10px">{{ ms.chevron }}</span>
+                <div style="font-size:14px;font-weight:600">{{ ms.label }}</div>
+                <sc-if value="{{ ms.isComplete }}" hint-placeholder-val="{{ false }}">
+                  <span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:3px 8px;border-radius:5px;background:#e9f6ee;color:#15803d">Complete</span>
+                </sc-if>
+                <span style="margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8a9099">{{ ms.tasksSection.done }}/{{ ms.tasksSection.total }} tasks · {{ ms.delivSection.done }}/{{ ms.delivSection.total }} deliverables</span>
+              </div>
+              <sc-if value="{{ ms.expanded }}" hint-placeholder-val="{{ false }}">
+              <div style="margin-top:16px;display:flex;flex-direction:column;gap:16px">
+
+                <div style="display:flex;align-items:center;gap:10px;background:#fafbfc;border:1px solid #eef0f3;border-radius:9px;padding:10px 12px">
+                  <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:#9aa1aa">Shoot date</div>
+                  <input type="date" value="{{ ms.shootDate }}" onChange="{{ ms.onShootDateChange }}" style="font:600 12.5px 'IBM Plex Sans';color:{{ ms.shootDateColor }};border:1px solid #dde1e6;border-radius:7px;padding:6px 9px;background:#fff" />
+                </div>
+
+                <div>
+                  <div onClick="{{ ms.tasksSection.onToggle }}" style="display:flex;align-items:center;margin-bottom:6px;cursor:pointer">
+                    <span style="font-size:11px;color:#9aa1aa;width:14px">{{ ms.tasksSection.chevron }}</span>
+                    <div style="font-size:13px;font-weight:600">Tasks</div>
+                    <span style="margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8a9099">{{ ms.tasksSection.done }}/{{ ms.tasksSection.total }}</span>
+                  </div>
+                  <sc-if value="{{ ms.tasksSection.expanded }}" hint-placeholder-val="{{ false }}">
+                  <sc-for list="{{ ms.tasks }}" as="t" hint-placeholder-count="7">
+                    <div style="display:flex;align-items:center;gap:12px;padding:11px 2px;border-top:1px solid #eef0f3">
+                      <div style="width:22px;height:22px;border-radius:50%;background:{{ t.ownerBg }};color:{{ t.ownerFg }};display:flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:600;flex-shrink:0">{{ t.ownerInit }}</div>
+                      <div style="flex:1;min-width:0">
+                        <div style="font-size:13px;font-weight:500">{{ t.label }}</div>
+                        <sc-if value="{{ t.ownerEditable }}" hint-placeholder-val="{{ false }}">
+                          <select value="{{ t.owner }}" onChange="{{ t.onOwnerSelect }}" style="appearance:none;-webkit-appearance:none;border:none;background:transparent;padding:0;cursor:pointer;font:500 11px 'IBM Plex Sans';color:#3754db;margin-top:1px;text-decoration:underline;text-decoration-color:#c7d0e8">
+                            <option value="Casey">Casey</option>
+                            <option value="Alex">Alex</option>
+                          </select>
+                        </sc-if>
+                        <sc-if value="{{ t.ownerNotEditable }}" hint-placeholder-val="{{ true }}">
+                          <div style="font-size:11px;color:#9aa1aa;margin-top:1px">{{ t.owner }}</div>
+                        </sc-if>
+                      </div>
+                      <div style="position:relative;display:flex;align-items:center">
+                        <span style="position:absolute;left:11px;width:7px;height:7px;border-radius:50%;background:{{ t.statusDot }};pointer-events:none"></span>
+                        <select value="{{ t.status }}" onChange="{{ t.onSelect }}" style="appearance:none;-webkit-appearance:none;border:1px solid {{ t.statusBorder }};cursor:pointer;font:600 11px 'IBM Plex Sans';padding:6px 26px 6px 25px;border-radius:7px;background:{{ t.statusBg }};color:{{ t.statusFg }}">
+                          <option value="Not started">Not started</option>
+                          <option value="In progress">In progress</option>
+                          <option value="Complete">Complete</option>
+                          <option value="Not applicable">Not applicable</option>
+                          <option value="Pending">Pending</option>
+                        </select>
+                        <svg style="position:absolute;right:9px;pointer-events:none" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="{{ t.statusFg }}" stroke-width="2.4"><path d="m6 9 6 6 6-6"/></svg>
+                      </div>
+                    </div>
+                  </sc-for>
+                  </sc-if>
+                </div>
+
+                <div>
+                  <div onClick="{{ ms.delivSection.onToggle }}" style="display:flex;align-items:center;margin-bottom:6px;cursor:pointer">
+                    <span style="font-size:11px;color:#9aa1aa;width:14px">{{ ms.delivSection.chevron }}</span>
+                    <div style="font-size:13px;font-weight:600">Deliverables</div>
+                    <span style="margin-left:10px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#8a9099">{{ ms.delivSection.done }}/{{ ms.delivSection.total }}</span>
+                  </div>
+                  <sc-if value="{{ ms.delivSection.expanded }}" hint-placeholder-val="{{ false }}">
+                  <sc-if value="{{ ms.hasDeliverables }}" hint-placeholder-val="{{ false }}">
+                    <sc-for list="{{ ms.deliverables }}" as="v" hint-placeholder-count="4">
+                      <div style="display:flex;align-items:center;gap:12px;padding:11px 2px;border-top:1px solid #eef0f3">
+                        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:600;color:#1a1d21;width:48px">{{ v.code }}</div>
+                        <div style="flex:1;min-width:0"></div>
+                        <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#7b828c;width:60px;text-align:right">{{ v.dueDate }}</span>
+                        <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.03em;padding:4px 9px;border-radius:6px;background:{{ v.statusBg }};color:{{ v.statusFg }};width:118px;text-align:center">{{ v.status }}</span>
+                      </div>
+                    </sc-for>
+                  </sc-if>
+                  <sc-if value="{{ ms.noDeliverables }}" hint-placeholder-val="{{ true }}">
+                    <div style="padding:20px 8px;text-align:center;color:#9aa1aa;font-size:12px;border-top:1px solid #eef0f3">No deliverables yet for this month.</div>
+                  </sc-if>
+                  </sc-if>
+                </div>
+
+              </div>
+              </sc-if>
+            </div>
+          </sc-for>
+          </sc-if>
+          </div>
+
+          <!-- right: timeline + files -->
+          <div style="display:flex;flex-direction:column;gap:18px">
+            <div style="background:#fff;border:1px solid #e3e6ea;border-radius:14px;padding:18px">
+              <div style="font-size:14px;font-weight:600;margin-bottom:15px">Client</div>
+              <div style="display:flex;flex-direction:column;gap:13px">
+                <div>
+                  <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:#9aa1aa;margin-bottom:3px">Business</div>
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <div style="font-size:13px;font-weight:600">{{ detail.name }}</div>
+                    <span style="font-family:'IBM Plex Mono',monospace;font-size:8.5px;letter-spacing:.06em;text-transform:uppercase;padding:2px 6px;border-radius:4px;background:{{ detail.typeBg }};color:{{ detail.typeFg }}">{{ detail.type }}</span>
+                  </div>
+                </div>
+                <sc-if value="{{ detail.isPromo }}" hint-placeholder-val="{{ true }}">
+                <div>
+                  <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:#9aa1aa;margin-bottom:3px">Shoot date</div>
+                  <input type="date" value="{{ detail.shootDate }}" onChange="{{ detail.onShootDateChange }}" style="font:600 12.5px 'IBM Plex Sans';color:{{ detail.shootDateColor }};border:1px solid #dde1e6;border-radius:7px;padding:6px 9px;background:#fff;width:100%" />
+                </div>
+                </sc-if>
+                <div>
+                  <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:#9aa1aa;margin-bottom:3px">Contact</div>
+                  <input value="{{ detail.info.contact }}" onChange="{{ detail.info.onContact }}" style="font:600 13px 'IBM Plex Sans';color:#1a1d21;border:1px solid #dde1e6;border-radius:7px;padding:6px 9px;background:#fff;width:100%" />
+                </div>
+                <div>
+                  <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:#9aa1aa;margin-bottom:3px">Email</div>
+                  <input value="{{ detail.info.email }}" onChange="{{ detail.info.onEmail }}" style="font:500 12.5px 'IBM Plex Sans';color:#3754db;border:1px solid #dde1e6;border-radius:7px;padding:6px 9px;background:#fff;width:100%" />
+                </div>
+                <div style="height:1px;background:#eef0f3;margin:1px 0"></div>
+                <div>
+                  <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:#9aa1aa;margin-bottom:3px">Contract</div>
+                  <input value="{{ detail.info.plan }}" onChange="{{ detail.info.onPlan }}" style="font:600 13px 'IBM Plex Sans';color:#1a1d21;border:1px solid #dde1e6;border-radius:7px;padding:6px 9px;background:#fff;width:100%" />
+                </div>
+                <div style="display:flex;gap:14px">
+                  <div style="flex:1">
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:#9aa1aa;margin-bottom:3px">Started</div>
+                    <input value="{{ detail.info.start }}" onChange="{{ detail.info.onStart }}" style="font:500 12.5px 'IBM Plex Sans';color:#1a1d21;border:1px solid #dde1e6;border-radius:7px;padding:6px 9px;background:#fff;width:100%" />
+                  </div>
+                  <div style="flex:1">
+                    <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:#9aa1aa;margin-bottom:3px">{{ detail.info.endLabel }}</div>
+                    <input value="{{ detail.info.end }}" onChange="{{ detail.info.onEnd }}" style="font:500 12.5px 'IBM Plex Sans';color:#1a1d21;border:1px solid #dde1e6;border-radius:7px;padding:6px 9px;background:#fff;width:100%" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div style="background:#fff;border:1px solid #e3e6ea;border-radius:14px;padding:18px">
+              <div style="font-size:14px;font-weight:600;margin-bottom:12px">Files &amp; links</div>
+              <div style="display:flex;flex-direction:column;gap:9px">
+                <sc-for list="{{ detail.files }}" as="f" hint-placeholder-count="3">
+                  <div style="display:flex;align-items:center;gap:10px;padding:9px 11px;border:1px solid #e3e6ea;border-radius:9px">
+                    <div style="width:26px;height:26px;border-radius:6px;background:{{ f.bg }};color:{{ f.fg }};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;font-family:'IBM Plex Mono',monospace">{{ f.tag }}</div>
+                    <div style="flex:1;min-width:0">
+                      <div style="font-size:12.5px;font-weight:500">{{ f.name }}</div>
+                      <sc-if value="{{ f.editing }}" hint-placeholder-val="{{ true }}">
+                        <input value="{{ f.link }}" onChange="{{ f.onChange }}" onKeyDown="{{ f.onKeyDown }}" onBlur="{{ f.onCommit }}" placeholder="{{ f.placeholder }}" style="width:100%;border:none;outline:none;background:transparent;padding:0;font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#5b6470" />
+                      </sc-if>
+                      <sc-if value="{{ f.showLink }}" hint-placeholder-val="{{ false }}">
+                        <div style="display:flex;align-items:center;gap:6px">
+                          <a href="{{ f.link }}" target="_blank" rel="noopener" style="font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#3754db;text-decoration:underline;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ f.link }}</a>
+                          <button onClick="{{ f.onEdit }}" style="border:none;background:none;cursor:pointer;padding:0;color:#9aa1aa;flex-shrink:0" title="Edit link">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg>
+                          </button>
+                        </div>
+                      </sc-if>
+                    </div>
+                    <a href="{{ f.linkHref }}" target="_blank" rel="noopener" style="display:flex;opacity:{{ f.arrowOpacity }};pointer-events:{{ f.arrowEvents }}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#9aa1aa" stroke-width="2"><path d="M7 17 17 7M9 7h8v8"/></svg></a>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+        </div>
+        </div>
+      </div>
+      </sc-if>
+
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1320,&quot;height&quot;:860}}">
+class Component extends DCLogic {
+  state = { screen: 'dashboard', expanded: {}, selected: {}, detailClient: 'LN', taskStatus: { 'EC:plan':'Complete', 'EC:approval':'Complete', 'MI:plan':'Complete', 'MI:bookapproval':'Complete', 'MI:approval':'Complete', 'MI:bookshoot':'Complete', 'MI:shoot':'Complete', 'MI:upload':'Complete', 'MI:package':'Complete', 'MI:editing':'Complete' }, videos: Component.buildVideos(),
+            showAddClient: false, addedClients: [], form: Component.blankForm(), onbOpen: {}, groupCollapsed: {}, sidebarCollapsed: false, detailMenuCollapsed: false, fileLinks: {}, fileEditing: {}, taskOwner: {}, sectionCollapsed: {}, shootDates: { MI: '2026-06-23' }, infoEdits: {}, retainerVideos: Component.buildRetainerVideos(), showAddVideos: false, addVideosForm: { client:'', count:'', stage:'', month:'1' }, toast: null };
+  static blankForm(){ return { type:'Retainer', business:'', contact:'', email:'', videos:'', start:'', end:'' }; }
+  _dragIds = [];
+  go(s){ this.setState({ screen: s }); }
+
+  static buildVideos(){
+    const titles = ['Hero film','Promo','Testimonial','Short — tip','Teaser','Spotlight','Walkthrough','CTA short','Story','Reel'];
+    const spec = [
+      ['EC', ['On Queue','On Queue','On Queue','On Queue','On Queue','On Queue','On Queue','On Queue','On Queue','On Queue']],
+      ['MI', ['Internal Review','Internal Review','Internal Review','Internal Review','Internal Review','Internal Review','Internal Review','Internal Review','Internal Review','Internal Review']],
+    ];
+    let id = 0; const out = [];
+    spec.forEach(function(row){
+      const code = row[0], arr = row[1];
+      arr.forEach(function(stage, i){
+        const num = String(i+1).padStart(3,'0');
+        out.push({ id: id++, companyCode: code, code: code+num, title: titles[i % titles.length], stage: stage,
+          ir: stage==='Internal Review'?1:((stage==='Client Review'||stage==='Final Delivery')?2:0),
+          cr: stage==='Client Review'?1:(stage==='Final Delivery'?2:0) });
+      });
+    });
+    return out;
+  }
+
+  static buildRetainerVideos(){
+    const currentMonthOf = { LN:3, IC:5, GR:2, OL:3, MC:3, PZ:2 };
+    let id = 0; const out = [];
+    Object.keys(currentMonthOf).forEach(function(code){
+      const curMo = currentMonthOf[code];
+      for(let mo=1; mo<=curMo; mo++){
+        const stage = mo<curMo ? 'Final Delivery' : 'On Queue';
+        for(let n=1; n<=10; n++){
+          out.push({ id: id++, companyCode: code, month: mo, num: n, code: code+String(mo).padStart(2,'0')+String(n).padStart(2,'0'), stage });
+        }
+      }
+    });
+    return out;
+  }
+
+  avatar(name){
+    const map = {
+      Alex:{bg:'#dfe8ff',fg:'#3754db',initials:'AL'},
+      Casey:{bg:'#e3eafe',fg:'#3754db',initials:'CA'},
+      Sam:{bg:'#ede0fb',fg:'#7c3aed',initials:'SA'},
+      Devon:{bg:'#d9efe6',fg:'#0f766e',initials:'DE'},
+      Morgan:{bg:'#fde7d6',fg:'#b45309',initials:'MO'},
+      Riley:{bg:'#dfe8ff',fg:'#3754db',initials:'RI'},
+      Taylor:{bg:'#ede0fb',fg:'#7c3aed',initials:'TA'},
+      Quinn:{bg:'#e3eafe',fg:'#3754db',initials:'QU'},
+      Jordan:{bg:'#fde7d6',fg:'#b45309',initials:'JO'},
+    };
+    return map[name] || {bg:'#e7eaef',fg:'#6b7280',initials:(name||'—').slice(0,2).toUpperCase()};
+  }
+  typeStyle(t){ return t==='Promo' ? {bg:'#eef1fd',fg:'#3754db'} : {bg:'#e9f4f1',fg:'#0f766e'}; }
+  stageStyle(s){
+    const m = {
+      'On Queue':{bg:'#f1f3f6',fg:'#8a9099'},
+      'Raw Upload':{bg:'#eef0f3',fg:'#6b7280'},
+      'Packaging':{bg:'#eef0f3',fg:'#475569'},
+      'Editing':{bg:'#eef1fd',fg:'#3754db'},
+      'Internal Review':{bg:'#f1ecfd',fg:'#7c3aed'},
+      'Client Review':{bg:'#fdf3e7',fg:'#b45309'},
+      'Final Delivery':{bg:'#e9f6ee',fg:'#15803d'},
+    };
+    return m[s] || {bg:'#eef0f3',fg:'#6b7280'};
+  }
+
+  renderVals(){
+    const screen = this.state.screen;
+    const go = (s)=>this.go(s);
+    const a = (n)=>this.avatar(n);
+
+    const nav = {
+      goDash:()=>go('dashboard'), goEdits:()=>go('edits'), goSched:()=>go('schedule'), goPipe:()=>go('pipeline'), goDetail:()=>go('detail'),
+    };
+    const collapsed = this.state.sidebarCollapsed;
+    const sb = {
+      width: collapsed ? '66px' : '236px',
+      padX: collapsed ? '9px' : '14px',
+      labelDisplay: collapsed ? 'none' : 'block',
+      navJustify: collapsed ? 'center' : 'flex-start',
+      expanded: !collapsed,
+      chevronRot: collapsed ? '180deg' : '0deg',
+      toggle: ()=>this.setState(s=>({ sidebarCollapsed: !s.sidebarCollapsed })),
+    };
+    const dmCollapsed = this.state.detailMenuCollapsed;
+    const dm = {
+      gridCols: dmCollapsed ? '58px minmax(0,1fr)' : '230px minmax(0,1fr)',
+      labelDisplay: dmCollapsed ? 'none' : 'block',
+      expanded: !dmCollapsed,
+      justify: dmCollapsed ? 'center' : 'flex-start',
+      chevronRot: dmCollapsed ? '180deg' : '0deg',
+      toggle: ()=>this.setState(s=>({ detailMenuCollapsed: !s.detailMenuCollapsed })),
+    };
+    const onc = '#eef1fd', onf = '#fff', off = '#9aa3b0';
+    nav.dashBg = screen==='dashboard'?'#222831':'transparent'; nav.dashFg = screen==='dashboard'?'#fff':off;
+    nav.editsBg = screen==='edits'?'#222831':'transparent'; nav.editsFg = screen==='edits'?'#fff':off;
+    nav.schedBg = screen==='schedule'?'#222831':'transparent'; nav.schedFg = screen==='schedule'?'#fff':off;
+    nav.pipeBg = screen==='pipeline'?'#222831':'transparent'; nav.pipeFg = screen==='pipeline'?'#fff':off;
+    nav.detailBg = screen==='detail'?'#222831':'transparent'; nav.detailFg = screen==='detail'?'#fff':off;
+
+    const titles = {
+      dashboard:['Dashboard','Tuesday, June 24'],
+      edits:['Video Production Pipeline','Post-production board across all active clients'],
+      schedule:['Shoot Schedule','Bookings, meetings & deadlines'],
+      pipeline:['Client Pipeline','Lifecycle from onboarding to live'],
+      detail:['Project Detail',''],
+    };
+    const [pageTitle, pageSubRaw] = titles[screen];
+
+    const team = ['Alex','Casey','Sam','Devon'].map(n=>{ const av=a(n); const roles={Alex:'Shoot',Casey:'Shoot',Sam:'Pkg',Devon:'Edit'}; return {name:n, initials:av.initials, bg:av.bg, fg:av.fg, role:roles[n]}; });
+
+    const stages = ['Raw Upload','Packaging','Editing','Internal Review','Client Review','Final Delivery'];
+
+    let edits = [];
+    const dotMap = {ok:'#16a34a', warn:'#d97706', bad:'#e5484d'};
+    edits = edits.map(e=>{
+      const t=this.typeStyle(e.type), s=this.stageStyle(e.stage), ow=a(e.owner);
+      return {...e, typeBg:t.bg, typeFg:t.fg, stageBg:s.bg, stageFg:s.fg, healthDot:dotMap[e.health],
+        ownerBg:ow.bg, ownerFg:ow.fg, ownerInit: (e.owner==='—'?'··':ow.initials) };
+    });
+
+    const companyMeta = {
+      LN:{name:'Bluecrest Studio',type:'Retainer'},
+      IC:{name:'Harbor & Vance Law',type:'Retainer'},
+      GR:{name:'Ferro Fitness',type:'Retainer'},
+      OL:{name:'Bellmore Legal',type:'Retainer'},
+      MC:{name:'Coastal & Co',type:'Retainer'},
+      PZ:{name:'Vantek Supply',type:'Retainer'},
+      EC:{name:'Nimbus Cloud',type:'Promo'},
+      MI:{name:'Bright Path Innovations',type:'Promo'},
+    };
+    const companyOrder = ['LN','IC','GR','OL','MC','PZ','EC','MI'];
+    // include user-added clients so their queued videos appear on the board
+    this.state.addedClients.forEach(ac=>{
+      if(!companyMeta[ac.code]){ companyMeta[ac.code] = { name:ac.business, type:ac.type }; }
+      if(companyOrder.indexOf(ac.code)===-1){ companyOrder.unshift(ac.code); }
+    });
+    const videos = this.state.videos;
+    const expandedMap = this.state.expanded;
+    const toggleCompany = (code)=>this.setState(s=>({ expanded: {...s.expanded, [code]: !s.expanded[code]} }));
+    const selectedMap = this.state.selected;
+    const selectedCount = Object.keys(selectedMap).filter(k=>selectedMap[k]).length;
+    const toggleSelect = (id)=>this.setState(s=>{ const sel={...s.selected}; if(sel[id]) delete sel[id]; else sel[id]=true; return { selected: sel }; });
+    const clearSel = ()=>this.setState({ selected: {} });
+    const dragOver = (e)=>{ e.preventDefault(); };
+    const dropTo = (stage)=>(e)=>{ e.preventDefault(); const ids=this._dragIds; this._dragIds=[]; if(ids&&ids.length){ const set={}; ids.forEach(i=>set[i]=true); this.setState(s=>({ videos: s.videos.map(v=> set[v.id] ? {...v, stage: stage} : v), retainerVideos: s.retainerVideos.map(v=> set['r'+v.id] ? {...v, stage: stage} : v), selected: {} })); } };
+    const dragStartV = (id)=>(e)=>{ const sel=this.state.selected; const selIds=Object.keys(sel).filter(k=>sel[k]); this._dragIds = (sel[id] && selIds.length) ? selIds : [id]; if(e&&e.dataTransfer){ e.dataTransfer.effectAllowed='move'; try{ e.dataTransfer.setData('text/plain','move'); }catch(err){} } };
+    const dragEndV = ()=>{ this._dragIds = []; };
+    const pipelineStages = ['On Queue'].concat(stages);
+    const retainerBoardVideos = this.state.retainerVideos.filter(v=>v.stage!=='Final Delivery').map(v=>({ ...v, id:'r'+v.id, title:'Deliverable', ir:0, cr:0 }));
+    const boardVideos = videos.concat(retainerBoardVideos);
+    const trackerColumns = pipelineStages.map(st=>{
+      const sc = this.stageStyle(st);
+      const inStage = boardVideos.filter(v=>v.stage===st);
+      const buckets = companyOrder.filter(code=> inStage.some(v=>v.companyCode===code)).map(code=>{
+        const cvs = inStage.filter(v=>v.companyCode===code);
+        const meta = companyMeta[code]; const t = this.typeStyle(meta.type);
+        const months = new Set(cvs.map(v=>v.month).filter(m=>m!=null));
+        const singleMonth = months.size===1 ? [...months][0] : null;
+        return { code: code, name:meta.name, type:meta.type, typeBg:t.bg, typeFg:t.fg, dot:t.fg,
+          count:cvs.length, expanded: !!expandedMap[code], chevron: expandedMap[code]?'▾':'▸',
+          note: meta.note||'', noteDot: meta.note ? (meta.bad?'#e5484d':'#d97706') : 'transparent',
+          monthShow: singleMonth!=null, month: singleMonth,
+          onToggle: ()=>toggleCompany(code),
+          onGroupDragStart: (e)=>{ this._dragIds = cvs.map(v=>v.id); if(e&&e.dataTransfer){ e.dataTransfer.effectAllowed='move'; try{ e.dataTransfer.setData('text/plain','move'); }catch(err){} } },
+          onGroupDragEnd: ()=>{ this._dragIds = []; },
+          videos: cvs.map(v=>{ const sel=!!selectedMap[v.id]; return { ...v, accent:t.fg, selected:sel, unselected:!sel, cardBg: sel?'#eef1fd':'#fff', cardBorder: sel?'#3754db':'#e3e6ea', onSelect:()=>toggleSelect(v.id), onDragStart:dragStartV(v.id), onDragEnd:dragEndV, irShow:v.ir>0, crShow:v.cr>0, monthShow: v.month!=null }; }) };
+      });
+      return { stage:st, name:st, fg:sc.fg, count:inStage.length, buckets: buckets, onDrop:dropTo(st), onDragOver:dragOver };
+    });
+
+    // ---- All clients overview (dashboard) ----
+    const shortStage = {'On Queue':'Queue','Raw Upload':'Raw','Packaging':'Pkg','Editing':'Editing','Internal Review':'Internal','Client Review':'Client','Final Delivery':'Final'};
+    const tone = {
+      ok:{bg:'#e9f6ee',fg:'#15803d'}, warn:{bg:'#fdf3e7',fg:'#b45309'}, bad:{bg:'#fdecec',fg:'#c2353a'},
+      neutral:{bg:'#eef0f3',fg:'#5b6470'}, blue:{bg:'#eef1fd',fg:'#3754db'}, purple:{bg:'#f1ecfd',fg:'#7c3aed'},
+      green:{bg:'#e9f6ee',fg:'#15803d'}, amber:{bg:'#fdf3e7',fg:'#b45309'},
+    };
+    const currentMonthOf = { LN:3, IC:5, GR:2, OL:3, MC:3, PZ:2 };
+    const clientList = [
+      {code:'LN', name:'Bluecrest Studio', type:'Retainer', stage:'In production', stageTone:'blue', status:'on', owner:'Riley'},
+      {code:'IC', name:'Harbor & Vance Law', type:'Retainer', stage:'In production', stageTone:'blue', status:'on', owner:'Riley'},
+      {code:'GR', name:'Ferro Fitness', type:'Retainer', stage:'In production', stageTone:'blue', status:'on', owner:'Riley'},
+      {code:'OL', name:'Bellmore Legal', type:'Retainer', stage:'In production', stageTone:'blue', status:'on', owner:'Riley'},
+      {code:'MC', name:'Coastal & Co', type:'Retainer', stage:'In production', stageTone:'blue', status:'on', owner:'Riley'},
+      {code:'PZ', name:'Vantek Supply', type:'Retainer', stage:'In production', stageTone:'blue', status:'on', owner:'Riley'},
+      {code:'EC', name:'Nimbus Cloud', type:'Promo', stage:'Content plan approved', stageTone:'neutral', next:'Book the shoot', nextDate:'TBD', status:'on', note:'Onboarding complete, content plan approved. Booking the shoot next.', owner:'Alex'},
+      {code:'MI', name:'Bright Path Innovations', type:'Promo', stage:'Internal review', stageTone:'purple', next:'Pass to client review', nextDate:'TBD', status:'on', note:'Editing complete on all 10 videos. Now in internal review.', owner:'Morgan'},
+    ].map(c=>{
+      if(c.type!=='Retainer') return c;
+      const cur = currentMonthOf[c.code] || 1;
+      return {...c, month:[cur,6], next:'Deliver month '+cur+' videos', nextDate:'In progress',
+        note: 'Month '+cur+' of 6 \u2014 months 1'+(cur>2?'\u2013'+(cur-1):'')+' delivered, month '+cur+' in production.'};
+    });
+    // merge in user-added clients (newest first at top of their group)
+    this.state.addedClients.forEach(ac=>{
+      clientList.unshift({ code:ac.code, name:ac.business, type:ac.type, month: ac.type==='Retainer'?[1, ac.months||6]:null,
+        stage:'Onboarding', stageTone:'neutral', next:'Kick off onboarding', nextDate:'New', status:'on',
+        note:'New client — onboarding just started.', owner:'Riley' });
+    });
+    const mapClient = (c)=>{
+      const cvs = videos.filter(v=>v.companyCode===c.code);
+      const dist = ['On Queue'].concat(stages).map(st=>({ stage:st, short:shortStage[st], count:cvs.filter(v=>v.stage===st).length, color:this.stageStyle(st).fg })).filter(d=>d.count>0);
+      const t = this.typeStyle(c.type), stg = tone[c.stageTone];
+      const on = c.status==='on';
+      const overdue = c.nextDate==='Due today' || c.nextDate==='Idle 4d';
+      const m = c.month || null;
+      return { ...c, typeBg:t.bg, typeFg:t.fg, total:cvs.length, dist:dist, hasEdits:cvs.length>0, noEdits:cvs.length===0,
+        stageBg:stg.bg, stageFg:stg.fg,
+        nextColor: overdue ? '#c2353a' : '#9aa1aa',
+        statusLabel: on?'On track':'Off track', statusBg: on?'#e9f6ee':'#fdecec', statusFg: on?'#15803d':'#c2353a', statusDot: on?'#16a34a':'#e5484d',
+        monthLabel: m ? (m[0]+' / '+m[1]) : '', monthPct: m ? (Math.round(m[0]/m[1]*100)+'%') : '0%',
+        onOpen: ()=>this.setState({ detailClient: c.code, screen: 'detail' }) };
+    };
+    const upcoming = [].map(u=>{
+      const st = {
+        shoot:{bg:'#eef1fd', accent:'#3754db', label:'Shoot'},
+        meeting:{bg:'#f4eefc', accent:'#7c3aed', label:'Meeting'},
+        deadline:{bg:'#fdf3e7', accent:'#d97706', label:'Deadline'},
+      }[u.kind];
+      return {...u, bg:st.bg, accent:st.accent, kindLabel:st.label,
+        onOpen: (()=>{ const m=clientList.find(x=>x.name===u.title); return m ? (()=>this.setState({ detailClient:m.code, screen:'detail' })) : (()=>go('schedule')); })() };
+    });
+
+    const retainers = clientList.filter(c=>c.type==='Retainer').map(mapClient);
+    const promos = clientList.filter(c=>c.type==='Promo').map(mapClient);
+    const retainerCount = retainers.length, promoCount = promos.length;
+
+    // ---- Project Detail: folder menu + per-client detail ----
+    const editorOf = {EC:'Quinn',MI:'Morgan'};
+    const stageIdx = {'Onboarding':-1,'Raw upload':0,'Packaging':1,'Editing':2,'Internal review':3,'Client review':4,'Final delivery':5};
+    const delivStatus = {
+      'On Queue':{label:'On queue',bg:'#f1f3f6',fg:'#8a9099'},
+      'Raw Upload':{label:'Not started',bg:'#eef0f3',fg:'#9aa1aa'},
+      'Packaging':{label:'Packaging',bg:'#eef0f3',fg:'#475569'},
+      'Editing':{label:'Editing',bg:'#eef1fd',fg:'#3754db'},
+      'Internal Review':{label:'Internal review',bg:'#f1ecfd',fg:'#7c3aed'},
+      'Client Review':{label:'Client review',bg:'#fdf3e7',fg:'#b45309'},
+      'Final Delivery':{label:'Delivered',bg:'#e9f6ee',fg:'#15803d'},
+    };
+    const setDetail = (code)=>this.setState({ detailClient: code, screen: 'detail' });
+
+    const detailMenu = [
+      {label:'Retainers', dot:'#0f766e', clients: clientList.filter(c=>c.type==='Retainer')},
+      {label:'Promo', dot:'#3754db', clients: clientList.filter(c=>c.type==='Promo')},
+    ].map(g=>{
+      const expanded = this.state.groupCollapsed[g.label] ? false : true;
+      return { label:g.label, dot:g.dot, count:g.clients.length, expanded, chevron: expanded?'▾':'▸', headerShow: !dmCollapsed, listOpen: dmCollapsed ? true : expanded,
+        onToggle: ()=>this.setState(s=>({ groupCollapsed:{...s.groupCollapsed, [g.label]: !s.groupCollapsed[g.label]} })),
+        clients: g.clients.map(c=>{
+          const active = c.code===this.state.detailClient; const t=this.typeStyle(c.type);
+          return { code:c.code, name:c.name, active, rowBg: active?'#f1f3f6':'transparent', nameFg: active?'#1a1d21':'#5b6470',
+            badgeBg:t.bg, badgeFg:t.fg, onOpen:()=>setDetail(c.code) };
+        }) };
+    });
+
+    const contractStart = {
+      LN:{y:2026,m:5}, IC:{y:2026,m:2}, GR:{y:2026,m:5}, OL:{y:2026,m:5}, MC:{y:2026,m:3}, PZ:{y:2026,m:5},
+    };
+    const contracts = {
+      EC:{contact:'Jamie Ellison', email:'jamie.ellison@example.com', plan:'—', start:'Mar 31, 2026', end:'One-time delivery'},
+      MI:{contact:'Chris Bowman', email:'chris.bowman@example.com', plan:'10-video promo package', start:'Apr 27, 2026', end:'One-time delivery'},
+    };
+    const fmtDate = (iso)=>{ if(!iso) return ''; const d=new Date(iso+'T00:00:00'); if(isNaN(d)) return iso; return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); };
+    this.state.addedClients.forEach(ac=>{
+      const planStr = ac.videos ? (ac.type==='Retainer' ? (ac.videos+' videos / month') : (ac.videos+'-video promo package')) : '—';
+      contracts[ac.code] = { contact:ac.contact||'—', email:ac.email||'—', plan:planStr,
+        start:fmtDate(ac.start)||'—', end:fmtDate(ac.end)||(ac.type==='Retainer'?'—':'One-time delivery') };
+    });
+
+    // ---- Add-client modal handlers ----
+    const openAdd = ()=>this.setState({ showAddClient:true, form: Component.blankForm() });
+    const closeAdd = ()=>this.setState({ showAddClient:false });
+    const setField = (k)=>(e)=>{ const val=e.target.value; this.setState(s=>({ form: {...s.form, [k]: val} })); };
+    const form = this.state.form;
+    const canSave = form.business.trim() && form.contact.trim() && form.email.trim();
+    const saveClient = ()=>{
+      if(!canSave) return;
+      const words = form.business.trim().split(/\s+/);
+      let base = (words.length>1 ? (words[0][0]+words[1][0]) : form.business.trim().slice(0,2)).toUpperCase();
+      const used = new Set([...clientList.map(c=>c.code)]);
+      let code = base, n=2; while(used.has(code)){ code = base+String(n); n++; }
+      const num = Math.max(0, Math.min(30, parseInt(form.videos,10) || 0));
+      const rec = { code, type:form.type, business:form.business.trim(), contact:form.contact.trim(),
+        email:form.email.trim(), videos:num||'', start:form.start.trim(), end:form.end.trim() };
+      // auto-create video cards on the pipeline queue
+      const vt = ['Hero film','Promo','Testimonial','Short — tip','Teaser','Spotlight','Walkthrough','CTA short','Story','Reel'];
+      let maxId = this.state.videos.reduce((a,v)=>Math.max(a,v.id), -1);
+      const newVideos = [];
+      for(let i=0;i<num;i++){ newVideos.push({ id: ++maxId, companyCode:code, code: code+String(i+1).padStart(3,'0'), title: vt[i%vt.length], stage:'On Queue', ir:0, cr:0 }); }
+      this.setState(s=>({ addedClients:[...s.addedClients, rec], videos:[...s.videos, ...newVideos],
+        expanded:{...s.expanded, [code]:true}, showAddClient:false, detailClient:code, screen:'detail', form:Component.blankForm() }));
+    };
+    const addClient = {
+      open:openAdd, close:closeAdd, save:saveClient, form, canSave,
+      stop:(e)=>{ e.stopPropagation(); },
+      show:this.state.showAddClient, isRetainer:form.type==='Retainer',
+      setField: { business:setField('business'), contact:setField('contact'), email:setField('email'), videos:setField('videos'), start:setField('start'), end:setField('end') },
+      setType: { retainer:()=>this.setState(s=>({ form:{...s.form, type:'Retainer'} })), promo:()=>this.setState(s=>({ form:{...s.form, type:'Promo'} })) },
+      typeRetainerBg: form.type==='Retainer'?'#0f766e':'#fff', typeRetainerFg: form.type==='Retainer'?'#fff':'#5b6470',
+      typePromoBg: form.type==='Promo'?'#3754db':'#fff', typePromoFg: form.type==='Promo'?'#fff':'#5b6470',
+      endLabel: form.type==='Retainer'?'Contract end date':'Delivery date',
+      saveDisabled: !canSave, saveBg: canSave?'#1a1d21':'#c4c9d0', saveCursor: canSave?'pointer':'not-allowed' };
+
+    // ---- Add-videos modal handlers ----
+    const avForm = this.state.addVideosForm;
+    const avClient = clientList.find(c=>c.code===avForm.client);
+    const avIsRetainer = avClient && avClient.type==='Retainer';
+    const promoStageOptions = ['On Queue','Raw Upload','Packaging','Editing','Internal Review','Client Review','Final Delivery'];
+    const retainerStageOptions = ['On Queue','Editing','Internal Review','Final Delivery'];
+    const avStageOptions = avIsRetainer ? retainerStageOptions : promoStageOptions;
+    const avCount = Math.max(0, Math.min(30, parseInt(avForm.count,10) || 0));
+    const avCanSave = !!avClient && avCount>0 && !!avForm.stage;
+    const openAddVideos = ()=>this.setState({ showAddVideos:true, addVideosForm:{ client:'', count:'', stage:'', month:'1' } });
+    const closeAddVideos = ()=>this.setState({ showAddVideos:false });
+    const saveAddVideos = ()=>{
+      if(!avCanSave) return;
+      const code = avForm.client;
+      if(avIsRetainer){
+        const mo = parseInt(avForm.month,10) || 1;
+        const existing = this.state.retainerVideos.filter(v=>v.companyCode===code && v.month===mo);
+        let maxNum = existing.reduce((a,v)=>Math.max(a,v.num),0);
+        let maxId = this.state.retainerVideos.reduce((a,v)=>Math.max(a,v.id),-1);
+        const additions = [];
+        for(let i=0;i<avCount;i++){
+          const num = ++maxNum;
+          additions.push({ id: ++maxId, companyCode:code, month:mo, num, code: code+String(mo).padStart(2,'0')+String(num).padStart(2,'0'), stage: avForm.stage });
+        }
+        this.setState(s=>({ retainerVideos:[...s.retainerVideos, ...additions], showAddVideos:false,
+          toast: { message: 'Added '+avCount+' video'+(avCount>1?'s':'')+' to '+avClient.name+' — Month '+mo, onView: ()=>this.setState({ detailClient:code, screen:'detail', toast:null }) } }));
+        clearTimeout(this._toastTimer); this._toastTimer = setTimeout(()=>this.setState({ toast:null }), 5000);
+      } else {
+        const existing = this.state.videos.filter(v=>v.companyCode===code);
+        let maxNum = existing.reduce((a,v)=>Math.max(a, parseInt(v.code.replace(code,''),10)||0), 0);
+        let maxId = this.state.videos.reduce((a,v)=>Math.max(a,v.id),-1);
+        const additions = [];
+        for(let i=0;i<avCount;i++){
+          const num = ++maxNum;
+          additions.push({ id: ++maxId, companyCode:code, code: code+String(num).padStart(3,'0'), title:'New deliverable', stage: avForm.stage, ir:0, cr:0 });
+        }
+        this.setState(s=>({ videos:[...s.videos, ...additions], showAddVideos:false,
+          toast: { message: 'Added '+avCount+' video'+(avCount>1?'s':'')+' to '+avClient.name, onView: ()=>this.setState({ detailClient:code, screen:'detail', toast:null }) } }));
+        clearTimeout(this._toastTimer); this._toastTimer = setTimeout(()=>this.setState({ toast:null }), 5000);
+      }
+    };
+    const clientOptions = clientList.map(c=>({ code:c.code, label: c.name+' \u2014 '+c.type }));
+    const avTypeStyle = avIsRetainer ? {bg:'#e9f6ee',fg:'#15803d'} : {bg:'#eef1fd',fg:'#3754db'};
+    const addVideos = {
+      show:this.state.showAddVideos, open:openAddVideos, close:closeAddVideos, save:saveAddVideos, stop:(e)=>{ e.stopPropagation(); },
+      form:avForm, clientOptions, showRest: !!avForm.client, isRetainer:avIsRetainer,
+      typeLabel: avIsRetainer?'Retainer \u00b7 monthly deliverable':'Promo \u00b7 one-off deliverable', typeBg:avTypeStyle.bg, typeFg:avTypeStyle.fg,
+      stageOptions: avStageOptions,
+      setClient: (e)=>{ const v=e.target.value; const cl=clientList.find(c=>c.code===v); const opts = cl&&cl.type==='Retainer' ? retainerStageOptions : promoStageOptions; this.setState(s=>({ addVideosForm:{...s.addVideosForm, client:v, stage: opts[0]} })); },
+      setCount: (e)=>{ const v=e.target.value; this.setState(s=>({ addVideosForm:{...s.addVideosForm, count:v} })); },
+      setMonth: (e)=>{ const v=e.target.value; this.setState(s=>({ addVideosForm:{...s.addVideosForm, month:v} })); },
+      setStage: (e)=>{ const v=e.target.value; this.setState(s=>({ addVideosForm:{...s.addVideosForm, stage:v} })); },
+      saveDisabled: !avCanSave, saveBg: avCanSave?'#1a1d21':'#c4c9d0', saveCursor: avCanSave?'pointer':'not-allowed' };
+
+    const buildDetail = (code)=>{
+      const c = clientList.find(x=>x.code===code) || clientList[0];
+      const cvs = videos.filter(v=>v.companyCode===c.code);
+      const t = this.typeStyle(c.type);
+      // Derive the client's live pipeline stage from its videos (the least-advanced one is the bottleneck).
+      const vOrder = ['On Queue','Raw Upload','Packaging','Editing','Internal Review','Client Review','Final Delivery'];
+      let liveIdx = stageIdx[c.stage] != null ? stageIdx[c.stage] : -1; // fallback (onboarding / no videos)
+      if(cvs.length){ liveIdx = Math.min.apply(null, cvs.map(v=>vOrder.indexOf(v.stage))); }
+      const idx = liveIdx;
+      const ds = stages.map((name,i)=>{
+        const isDone = i<idx, isCurrent = i===idx;
+        return { name, isDone, isCurrent, notLast: i!==stages.length-1,
+          dotBg: isDone?'#16a34a':(isCurrent?'#3754db':'#fff'),
+          dotBorder: isDone?'#16a34a':(isCurrent?'#3754db':'#cdd2d8'),
+          lineBg: i===0?'transparent':(i<=idx?'#16a34a':'#e3e6ea'),
+          vlineBg: i<idx?'#16a34a':'#e3e6ea',
+          labelFg: (isDone||isCurrent)?'#1a1d21':'#9aa1aa',
+          labelWeight: isCurrent?'600':'500' };
+      });
+      const shootDateVal = this.state.shootDates[code] || '';
+      const addBusinessDays = (iso, n)=>{
+        if(!iso) return '';
+        const d = new Date(iso+'T00:00:00');
+        if(isNaN(d)) return '';
+        let added = 0;
+        while(added < n){
+          d.setDate(d.getDate()+1);
+          const dow = d.getDay();
+          if(dow!==0 && dow!==6) added++;
+        }
+        return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+      };
+      const dueDateStr = addBusinessDays(shootDateVal, 10);
+      const deliverables = cvs.map((v,i)=>{ const s=delivStatus[v.stage]; return { n:String(i+1).padStart(2,'0'), code:v.code, title:v.title, status:s.label, statusBg:s.bg, statusFg:s.fg, ir:v.ir, hasRev:v.ir>0, dueDate: dueDateStr || '\u2014' }; });
+      const irTotal = cvs.reduce((a,v)=>a+v.ir,0), crTotal = cvs.reduce((a,v)=>a+v.cr,0);
+      const ed = editorOf[code] || '—';
+      const mLabels = ['Onboarding','Discovery call complete','Content plan complete','Content plan approved','Shoot booked','Shoot complete','Raw files uploaded','Raw files packaged','Editing','Internal review','Handover meeting booked','Handover complete','Client review','Final delivery'];
+      const stageToMilestone = ['Shoot complete','Raw files uploaded','Raw files packaged','Editing','Internal review','Client review','Final delivery'];
+      const milestoneIdx = {'Shoot complete':5,'Raw files uploaded':6,'Raw files packaged':7,'Editing':8,'Internal review':9,'Client review':12,'Final delivery':13};
+      // live milestone: from the derived pipeline stage when the client has videos, else the static lifecycle stage
+      const producedVideos = cvs.filter(v=>v.stage!=='On Queue');
+      let cur = ({'Onboarding':0,'Raw upload':6,'Packaging':7,'Editing':8,'Internal review':9,'Client review':12,'Final delivery':13})[c.stage];
+      if(producedVideos.length){ cur = milestoneIdx[stageToMilestone[idx]]; }
+      if(cur == null) cur = 0;
+      const stageLabel = cvs.length ? vOrder[idx] : c.stage;
+      const fileDefs = [
+        {tag:'RAW', bg:'#eef0f3', fg:'#6b7280', name:c.code+'_'+'RAW', placeholder: (cvs.length && idx>=1)?'uploaded — paste folder link':'pending upload — paste folder link'},
+        {tag:'F.IO', bg:'#eef1fd', fg:'#3754db', name:'Frame.io review link', placeholder: 'V1 · '+cvs.filter(v=>['Client Review','Internal Review','Final Delivery'].includes(v.stage)).length+' of '+cvs.length+' posted — paste link'},
+        {tag:'DRV', bg:'#e9f6ee', fg:'#15803d', name:'Final delivery (Drive)', placeholder: (cvs.length && cvs.every(v=>v.stage==='Final Delivery'))?'ready — paste link':'on final approval — paste link'},
+      ];
+      const files = fileDefs.map(fd=>{
+        const key = code+':'+fd.tag;
+        const link = this.state.fileLinks[key] || '';
+        const editingState = this.state.fileEditing[key];
+        const editing = editingState==null ? !link : editingState;
+        const setEditing = (v)=>this.setState(st=>({ fileEditing:{...st.fileEditing, [key]: v} }));
+        return { ...fd, link, editing, showLink: !editing && !!link,
+          linkHref: link || 'javascript:void(0)', arrowOpacity: link?'1':'0.35', arrowEvents: link?'auto':'none',
+          onChange: (e)=>{ const v=e.target.value; this.setState(st=>({ fileLinks:{...st.fileLinks, [key]: v} })); },
+          onKeyDown: (e)=>{ if(e.key==='Enter'){ e.preventDefault(); if(e.target.value.trim()) setEditing(false); } },
+          onCommit: (e)=>{ if(e.target.value.trim()) setEditing(false); },
+          onEdit: ()=>setEditing(true) };
+      });
+      const metaLine = c.type==='Retainer'
+        ? ('Month '+ (c.month? c.month[0]+' of '+c.month[1] : '—') +' · '+ cvs.length +' deliverables')
+        : ('Promo · '+ cvs.length +' deliverables');
+      const ct = contracts[code] || {};
+      const ov = this.state.infoEdits[code] || {};
+      const setInfo = (k)=>(e)=>{ const v=e.target.value; this.setState(st=>({ infoEdits: {...st.infoEdits, [code]: {...(st.infoEdits[code]||{}), [k]: v} } })); };
+      const info = { contact: ov.contact ?? (ct.contact||'—'), email: ov.email ?? (ct.email||'—'), plan: ov.plan ?? (ct.plan||'—'), start: ov.start ?? (ct.start||'—'), end: ov.end ?? (ct.end||'—'),
+        endLabel: c.type==='Retainer'?'Contract ends':'Delivery', isRetainer:c.type==='Retainer',
+        onContact: setInfo('contact'), onEmail: setInfo('email'), onPlan: setInfo('plan'), onStart: setInfo('start'), onEnd: setInfo('end') };
+
+      // tasks
+      const TASK_STATUS = {
+        'Not started':{bg:'#eef0f3',fg:'#7b828c',dot:'#aeb4bd',border:'#e0e3e8'},
+        'In progress':{bg:'#eef1fd',fg:'#3754db',dot:'#3754db',border:'#d4ddfb'},
+        'Complete':{bg:'#e9f6ee',fg:'#15803d',dot:'#16a34a',border:'#cde7d6'},
+        'Not applicable':{bg:'#e9f6ee',fg:'#15803d',dot:'#16a34a',border:'#cde7d6'},
+        'Pending':{bg:'#fdf3e7',fg:'#b45309',dot:'#d97706',border:'#f6e2c4'},
+      };
+      const isTaskDone = (s)=> s==='Complete' || s==='Not applicable';
+      let taskDefs = [
+        {id:'plan', label:'Create content plan', owner:'Alex', m:2},
+        {id:'bookapproval', label:'Book content plan approval meeting', owner:'Jordan', m:2},
+        {id:'approval', label:'Content plan approval meeting', owner:'Alex', m:3},
+        {id:'bookshoot', label:'Book the shoot', owner:'Jordan', m:4},
+        {id:'shoot', label:'Conduct shoot', owner:'Alex', m:5},
+        {id:'upload', label:'Upload raw files', owner:'Casey', m:6},
+        {id:'package', label:'Package content', owner:'Sam', m:7},
+        {id:'editing', label:'Editing', owner:'Quinn', m:8},
+        {id:'internalreview', label:'Internal review', owner:'Alex', m:9},
+        {id:'clientreview', label:'Client review', owner:'Sam', m:12},
+        {id:'bookhandover', label:'Book handover meeting', owner:'Alex', m:10},
+        {id:'handover', label:'Conduct handover meeting', owner:'Alex', m:11},
+        {id:'deliver', label:'Final delivery to Drive', owner:'Sam', m:13},
+      ];
+      if(c.type==='Retainer'){
+        taskDefs = taskDefs.filter(t=>t.id!=='bookhandover' && t.id!=='handover' && t.id!=='deliver').concat([{id:'deliver', label:'Deliver to client', owner:'Sam', m:13}]);
+      }
+
+      // ---- Onboarding (promo only) ----
+      const onbDefs = [
+        {id:'invoice', label:'Payment invoice sent', owner:'Jordan'},
+        {id:'onbemail', label:'Send onboarding email and SLA', owner:'Jordan'},
+        {id:'slackinvite', label:'Slack invite sent', owner:'Jordan'},
+        {id:'payment', label:'Payment complete', owner:'Jordan'},
+        {id:'sla', label:'SLA signed', owner:'Jordan'},
+        {id:'joined', label:'Joined Slack', owner:'Jordan'},
+        {id:'discbook', label:'Discovery call booked', owner:'Jordan'},
+        {id:'disccomplete', label:'Discovery call complete', owner:'Jordan'},
+      ];
+      const pastOnboarding = c.stage !== 'Onboarding';
+      const onbSeed = {invoice:'Complete', onbemail:'Complete', slackinvite:'Complete', payment:'Pending', sla:'Not started', joined:'Not started', discbook:'Not started', disccomplete:'Not started'};
+      const onboarding = onbDefs.map(t=>{
+        const def = pastOnboarding ? 'Complete' : (onbSeed[t.id] || 'Not started');
+        const status = this.state.taskStatus[code+':onb:'+t.id] || def;
+        const s = TASK_STATUS[status];
+        const ow = this.avatar(t.owner);
+        return { id:t.id, label:t.label, owner:t.owner, ownerBg:ow.bg, ownerFg:ow.fg, ownerInit:ow.initials,
+          status, statusBg:s.bg, statusFg:s.fg, statusDot:s.dot, statusBorder:s.border,
+          onSelect:(e)=>{ const next=e.target.value; this.setState(st=>({ taskStatus:{...st.taskStatus, [code+':onb:'+t.id]: next} })); } };
+      });
+      const onbDone = onboarding.filter(t=>isTaskDone(t.status)).length;
+      const onbAllComplete = onbDone===onboarding.length;
+      const onbUserToggle = this.state.onbOpen[code];
+      const onbExpanded = onbUserToggle==null ? !onbAllComplete : onbUserToggle;
+      const onb = { show:c.type==='Promo', tasks:onboarding, done:onbDone, total:onboarding.length,
+        allComplete:onbAllComplete, expanded:onbExpanded, chevron: onbExpanded?'▾':'▸',
+        onToggle: ()=>this.setState(st=>({ onbOpen:{...st.onbOpen, [code]: !onbExpanded} })) };
+
+      const buildTaskList = (defs, keyPrefix, curForDefault)=> defs.map(t=>{
+        const def = t.m<curForDefault ? 'Complete' : (t.m===curForDefault ? 'In progress' : 'Not started');
+        const status = this.state.taskStatus[keyPrefix+t.id] || def;
+        const s = TASK_STATUS[status];
+        const ownerEditable = ['plan','approval','shoot','rediscovery'].includes(t.id);
+        const owner = ownerEditable ? (this.state.taskOwner[keyPrefix+t.id] || t.owner) : t.owner;
+        const ow = this.avatar(owner);
+        return { id:t.id, label:t.label, owner, ownerBg:ow.bg, ownerFg:ow.fg, ownerInit:ow.initials, m:t.m, ownerEditable, ownerNotEditable:!ownerEditable,
+          status, statusBg:s.bg, statusFg:s.fg, statusDot:s.dot, statusBorder:s.border,
+          onSelect: (e)=>{ const next = e.target.value; this.setState(st=>({ taskStatus: {...st.taskStatus, [keyPrefix+t.id]: next} })); },
+          onOwnerSelect: (e)=>{ const next = e.target.value; this.setState(st=>({ taskOwner: {...st.taskOwner, [keyPrefix+t.id]: next} })); } };
+      });
+      const isRetainerMonthly = c.type==='Retainer';
+      const month1Defs = isRetainerMonthly ? [{id:'rediscovery', label:'Conduct re-discovery call', owner:'Casey', m:1}].concat(taskDefs) : taskDefs;
+      const tasks = isRetainerMonthly ? buildTaskList(month1Defs, code+':m1:', cur) : buildTaskList(taskDefs, code+':', cur);
+      // ---- Derive the live timeline position from actual task completion (when the client has no videos yet) ----
+      if(!producedVideos.length){
+        let derivedCur = onbAllComplete ? 1 : -1;
+        tasks.forEach(t=>{ if(isTaskDone(t.status)){ derivedCur = Math.max(derivedCur, t.m); } });
+        cur = derivedCur >= 0 ? Math.min(derivedCur+1, 13) : 0;
+      }
+      const timeline = mLabels.map((label,i)=>{
+        const done = i<cur, current = i===cur, future = i>cur;
+        return { date: current ? c.nextDate : '—', label,
+          dotBg: done?'#16a34a':(current?'#3754db':'#fff'),
+          dotBorder: done?'#16a34a':(current?'#3754db':'#cdd2d8'),
+          leftLineBg: i===0 ? 'transparent' : (future?'#e3e6ea':'#16a34a'),
+          fg: future?'#9aa1aa':'#1a1d21', weight: current?'600':'500' };
+      }).map((t,i,arr)=> i===1 ? {...t, leftLineBg:'transparent'} : t)
+        .filter((t,i)=> !(c.type==='Retainer' && i===0));
+      const nextMilestone = cur < mLabels.length ? mLabels[cur] : 'Complete';
+      const monthSections = !isRetainerMonthly ? [] : [1,2,3,4,5,6].map(mo=>{
+        const defs = month1Defs;
+        const keyPrefix = code+':m'+mo+':';
+        const moShootKey = code+':m'+mo;
+        const moShootDate = this.state.shootDates[moShootKey] || '';
+        const moDueDateStr = addBusinessDays(moShootDate, 10);
+        const curMo = currentMonthOf[code] || 1;
+        const moCurForDefault = mo < curMo ? 99 : 0;
+        const moTasks = buildTaskList(defs, keyPrefix, moCurForDefault);
+        const moDone = moTasks.filter(t=>isTaskDone(t.status)).length;
+        const isComplete = moTasks.length>0 && moDone===moTasks.length;
+        const moDeliverables = this.state.retainerVideos.filter(v=>v.companyCode===code && v.month===mo)
+          .sort((a,b)=>a.num-b.num)
+          .map(v=>{ const s=delivStatus[v.stage]; return { code:v.code, stage:v.stage, status:s.label, statusBg:s.bg, statusFg:s.fg, dueDate: moDueDateStr || '\u2014' }; });
+        const monthCollapseKey = code+':month:'+mo;
+        const monthUserVal = this.state.sectionCollapsed[monthCollapseKey];
+        const monthCollapsedDefault = mo!==1;
+        const monthCollapsed = monthUserVal==null ? monthCollapsedDefault : monthUserVal;
+        const monthExpanded = !monthCollapsed;
+        const tasksKey = code+':m'+mo+':tasksSec', delivKey = code+':m'+mo+':delivSec';
+        const cs = contractStart[code];
+        const monthDate = cs ? new Date(cs.y, cs.m-1 + (mo-1), 1) : null;
+        const monthName = monthDate ? monthDate.toLocaleDateString('en-US',{month:'long',year:'numeric'}) : '';
+        return {
+          label: 'Month '+mo+(monthName ? ' \u00b7 '+monthName : ''), isComplete, expanded: monthExpanded, chevron: monthExpanded?'\u25be':'\u25b8',
+          onToggleMonth: ()=>this.setState(st=>({ sectionCollapsed:{...st.sectionCollapsed, [monthCollapseKey]: !monthCollapsed} })),
+          shootDate: moShootDate, shootDateColor: moShootDate ? '#1a1d21' : '#9aa1aa',
+          onShootDateChange: (e)=>{ const v=e.target.value; this.setState(st=>({ shootDates:{...st.shootDates, [moShootKey]: v} })); },
+          tasks: moTasks,
+          tasksSection: { expanded: !this.state.sectionCollapsed[tasksKey], chevron: this.state.sectionCollapsed[tasksKey]?'\u25b8':'\u25be',
+            done: moDone, total: moTasks.length,
+            onToggle: ()=>this.setState(st=>({ sectionCollapsed:{...st.sectionCollapsed, [tasksKey]: !st.sectionCollapsed[tasksKey]} })) },
+          deliverables: moDeliverables, hasDeliverables: moDeliverables.length>0, noDeliverables: moDeliverables.length===0,
+          delivSection: { expanded: !this.state.sectionCollapsed[delivKey], chevron: this.state.sectionCollapsed[delivKey]?'\u25b8':'\u25be',
+            done: moDeliverables.filter(v=>v.stage==='Final Delivery').length, total: moDeliverables.length,
+            onToggle: ()=>this.setState(st=>({ sectionCollapsed:{...st.sectionCollapsed, [delivKey]: !st.sectionCollapsed[delivKey]} })) },
+        };
+      });
+      return { code:c.code, name:c.name, type:c.type, typeBg:t.bg, typeFg:t.fg, metaLine,
+        account:c.owner, editor:ed, firstDelivery:c.nextDate, nextMilestone, note:c.note, info, tasks, onb,
+        isPromo: !isRetainerMonthly, isRetainerMonthly, monthSections,
+        shootDate: this.state.shootDates[code] || '', shootDateColor: this.state.shootDates[code] ? '#1a1d21' : '#9aa1aa',
+        onShootDateChange: (e)=>{ const v=e.target.value; this.setState(st=>({ shootDates:{...st.shootDates, [code]: v} })); },
+        tasksSection: { expanded: !this.state.sectionCollapsed[code+':tasks'], chevron: this.state.sectionCollapsed[code+':tasks']?'\u25b8':'\u25be',
+          done: tasks.filter(t=>isTaskDone(t.status)).length, total: tasks.length,
+          onToggle: ()=>this.setState(st=>({ sectionCollapsed:{...st.sectionCollapsed, [code+':tasks']: !st.sectionCollapsed[code+':tasks']} })) },
+        delivSection: { expanded: !this.state.sectionCollapsed[code+':deliv'], chevron: this.state.sectionCollapsed[code+':deliv']?'\u25b8':'\u25be',
+          done: cvs.filter(v=>v.stage==='Final Delivery').length, total: cvs.length,
+          onToggle: ()=>this.setState(st=>({ sectionCollapsed:{...st.sectionCollapsed, [code+':deliv']: !st.sectionCollapsed[code+':deliv']} })) },
+        stepper:ds, deliverables, irTotal, crTotal, hasDeliverables:deliverables.length>0, noDeliverables:deliverables.length===0,
+        timeline, files };
+    };
+    const detail = buildDetail(this.state.detailClient);
+    const funnel = stages.map(st=>{ const s=this.stageStyle(st); const c=edits.filter(e=>e.stage===st).length; return {name:st, count:c, fg:s.fg, bar:s.fg}; });
+    const queue = [...edits].sort((x,y)=>(y.blocked?1:0)-(x.blocked?1:0) || 0);
+
+    const kpis = [
+      {value:'0', label:'In editing queue', sub:'no retainers in production yet', color:'#1a1d21'},
+      {value:'0', label:'Blocked', sub:'need action now', color:'#1a1d21'},
+      {value:'0', label:'Awaiting client', sub:'no reviews out yet', color:'#1a1d21'},
+      {value:'0', label:'Shoots this week', sub:'Mon – Fri', color:'#1a1d21'},
+      {value:'0', label:'Deliveries due (7d)', sub:'none due', color:'#1a1d21'},
+    ];
+
+    const alerts = [
+      {text:'Nimbus Cloud — book the shoot to keep the promo on schedule.', cta:'Open project', dot:'#d97706'},
+      {text:'Bright Path Innovations — all 10 videos in internal review.', cta:'Open project', dot:'#3754db'},
+      {text:'6 new retainer clients added — kick off onboarding.', cta:'View clients', dot:'#0f766e'},
+    ];
+
+    const crew = (names)=>names.map(n=>{ const av=a(n); return {initials:av.initials, bg:av.bg, fg:av.fg}; });
+    const weekShoots = [];
+    const pageSub = screen==='detail' ? (detail.name + ' · ' + detail.metaLine)
+      : screen==='dashboard' ? (pageSubRaw + ' · ' + edits.length + ' active edits, ' + weekShoots.length + ' shoots this week')
+      : pageSubRaw;
+
+    // schedule week
+    const ev = (title, sub, kind)=>{
+      const styles = {
+        shoot:{bg:'#eef1fd', accent:'#3754db', fg:'#23306e'},
+        meeting:{bg:'#f4eefc', accent:'#7c3aed', fg:'#5b2aa0'},
+        deadline:{bg:'#fdf3e7', accent:'#d97706', fg:'#8a4d09'},
+      }[kind];
+      return {title, sub, ...styles};
+    };
+    const week = [
+      {dow:'Mon', dnum:'23', events:[]},
+      {dow:'Tue', dnum:'24', today:true, events:[]},
+      {dow:'Wed', dnum:'25', events:[]},
+      {dow:'Thu', dnum:'26', events:[]},
+      {dow:'Fri', dnum:'27', events:[]},
+      {dow:'Sat', dnum:'28', events:[]},
+      {dow:'Sun', dnum:'29', events:[]},
+    ].map(d=>({...d, colBg: d.today?'#fbfcff':'#fff', numColor: d.today?'#3754db':'#1a1d21'}));
+
+    const needsBooking = [
+      {client:'Bluecrest Studio', kind:'Discovery', kbg:'#eef1fd', kfg:'#3754db', note:'New retainer — book discovery call', cta:'Book discovery'},
+      {client:'Harbor & Vance Law', kind:'Discovery', kbg:'#eef1fd', kfg:'#3754db', note:'New retainer — book discovery call', cta:'Book discovery'},
+      {client:'Ferro Fitness', kind:'Discovery', kbg:'#eef1fd', kfg:'#3754db', note:'New retainer — book discovery call', cta:'Book discovery'},
+      {client:'Bellmore Legal', kind:'Discovery', kbg:'#eef1fd', kfg:'#3754db', note:'New retainer — book discovery call', cta:'Book discovery'},
+      {client:'Coastal & Co', kind:'Discovery', kbg:'#eef1fd', kfg:'#3754db', note:'New retainer — book discovery call', cta:'Book discovery'},
+      {client:'Vantek Supply', kind:'Discovery', kbg:'#eef1fd', kfg:'#3754db', note:'New retainer — book discovery call', cta:'Book discovery'},
+    ];
+    const crewLoad = [
+      {name:'Alex', count:3}, {name:'Casey', count:2},
+    ].map(c=>{ const av=a(c.name); return {...c, initials:av.initials, bg:av.bg, fg:av.fg}; });
+
+    // pipeline
+    const pipeRaw = [
+      {name:'Onboarding', items:[
+        {client:'Bluecrest Studio', type:'Retainer', note:'New retainer — onboarding just started', owner:'Riley', next:'Kick off'},
+        {client:'Harbor & Vance Law', type:'Retainer', note:'New retainer — onboarding just started', owner:'Riley', next:'Kick off'},
+        {client:'Ferro Fitness', type:'Retainer', note:'New retainer — onboarding just started', owner:'Riley', next:'Kick off'},
+        {client:'Bellmore Legal', type:'Retainer', note:'New retainer — onboarding just started', owner:'Riley', next:'Kick off'},
+        {client:'Coastal & Co', type:'Retainer', note:'New retainer — onboarding just started', owner:'Riley', next:'Kick off'},
+        {client:'Vantek Supply', type:'Retainer', note:'New retainer — onboarding just started', owner:'Riley', next:'Kick off'},
+      ]},
+      {name:'Discovery & Plan', items:[]},
+      {name:'Plan Approval', items:[{client:'Nimbus Cloud', type:'Promo', note:'Onboarding complete, content plan approved. Booking the shoot next.', owner:'Alex', next:'Book shoot'}]},
+      {name:'Shoot Scheduled', items:[]},
+      {name:'In Post', items:[]},
+      {name:'Client Review', items:[]},
+      {name:'Delivered / Live', items:[]},
+    ];
+    const nameToCode = {}; clientList.forEach(c=>{ nameToCode[c.name]=c.code; });
+    const pipeColumns = pipeRaw.map(col=>({ name:col.name, count:col.items.length, items: col.items.map(c=>{ const t=this.typeStyle(c.type), ow=a(c.owner); const code=nameToCode[c.client]; return {...c, typeFg:t.fg, ownerBg:ow.bg, ownerFg:ow.fg, ownerInit:ow.initials, onOpen: code ? (()=>this.setState({ detailClient:code, screen:'detail' })) : (()=>{}) }; }) }));
+
+    // project detail
+    return {
+      nav, sb, dm, pageTitle, pageSub, team,
+      isDash: screen==='dashboard', isEdits: screen==='edits', isSched: screen==='schedule', isPipe: screen==='pipeline', isDetail: screen==='detail',
+      kpis, funnel, queue, alerts, weekShoots,
+      trackerColumns, hasSelection: selectedCount>0, selectedCount, clearSel,
+      retainers, promos, retainerCount, promoCount, upcoming,
+      detailMenu, detail, addClient, addVideos,
+      toast: this.state.toast ? { message:this.state.toast.message, onView:this.state.toast.onView, onDismiss:()=>this.setState({toast:null}) } : null,
+      week, needsBooking, crewLoad,
+      pipeColumns,
+    };
+  }
+}
+</script>
+</body>
+</html>
