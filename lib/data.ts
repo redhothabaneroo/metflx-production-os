@@ -304,114 +304,75 @@ export async function listKanbanBoard() {
   return columns;
 }
 
-export async function listLifecycleLanes() {
-  await repairOrphanedMonthlyVideos();
-  await repairStuckMonths();
-  await repairPriyaOwner();
-  await repairJulesAssignments();
-  const LANES = [
-    "Onboarding",
-    "Discovery & Plan",
-    "Plan Approval",
-    "Shoot Scheduled",
-    "In Post",
-    "Client Review",
-    "Delivered / Live",
-  ];
-  const laneKeyMap: Record<string, string> = {
-    "Delivered / Live": "Delivered/Live",
-  };
-  const clients = await prisma.client.findMany({ where: { active: true }, orderBy: { createdAt: "asc" } });
-  return LANES.map((label) => {
-    const key = laneKeyMap[label] || label;
-    const items = clients
-      .filter((c) => c.lane === key)
-      .map((c) => {
-        const t = typeStyle(clientTypeLabel(c.type));
-        const ow = avatar(c.owner);
-        return {
-          code: c.code,
-          client: c.name,
-          type: clientTypeLabel(c.type),
-          typeFg: t.fg,
-          note: c.note || (c.lane === "Onboarding" ? "New client — onboarding just started" : ""),
-          owner: c.owner,
-          ownerBg: ow.bg,
-          ownerFg: ow.fg,
-          ownerInit: ow.initials,
-          next: c.lane === "Onboarding" ? "Kick off" : c.lane === "Plan Approval" ? "Book shoot" : "—",
-        };
-      });
-    return { name: label, count: items.length, items };
-  });
+type CalendarEvent = { code: string; title: string; sub: string; kind: "shoot" | "meeting" | "deadline" };
+
+const CALENDAR_KIND_STYLE: Record<CalendarEvent["kind"], { bg: string; accent: string; fg: string }> = {
+  shoot: { bg: "#eef1fd", accent: "#3754db", fg: "#23306e" },
+  meeting: { bg: "#f4eefc", accent: "#7c3aed", fg: "#5b2aa0" },
+  deadline: { bg: "#fdf3e7", accent: "#d97706", fg: "#8a4d09" },
+};
+
+function mondayOf(d: Date): Date {
+  const m = new Date(d);
+  m.setHours(0, 0, 0, 0);
+  m.setDate(m.getDate() - ((m.getDay() + 6) % 7));
+  return m;
 }
 
-export async function listSchedule() {
-  await repairOrphanedMonthlyVideos();
-  await repairStuckMonths();
-  await repairPriyaOwner();
-  await repairJulesAssignments();
+// Every date-bearing thing a client can have scheduled — shoots, the
+// discovery-call and content-plan-approval meeting dates set per retainer
+// month (previously missing from the calendar entirely), and the
+// deliverables-due deadline derived from a shoot date.
+async function gatherCalendarEvents() {
   const clients = await prisma.client.findMany({ where: { active: true } });
-  const shootDates = (await prisma.shootDate.findMany({ where: { date: { not: null } } })).filter((s) => s.scopeKey === "main" || /^m\d+$/.test(s.scopeKey));
+  const shootDateRows = await prisma.shootDate.findMany({ where: { date: { not: null } } });
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const monday = new Date(today);
-  monday.setDate(today.getDate() - ((today.getDay() + 6) % 7));
-
-  const dayNames = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-  const days = dayNames.map((dow, i) => {
-    const d = new Date(monday);
-    d.setDate(monday.getDate() + i);
-    const isToday = d.toDateString() === today.toDateString();
-    return { dow, dnum: String(d.getDate()), date: d, isToday, events: [] as Array<{ title: string; sub: string; kind: string }> };
-  });
-
-  const addEvent = (date: Date | null, title: string, sub: string, kind: string) => {
+  const eventsByDay = new Map<string, CalendarEvent[]>();
+  const pushEvent = (date: Date | null, ev: CalendarEvent) => {
     if (!date) return;
-    const day = days.find((d) => d.date.toDateString() === date.toDateString());
-    if (day) day.events.push({ title, sub, kind });
+    const key = toDateInputValue(date);
+    const list = eventsByDay.get(key) || [];
+    list.push(ev);
+    eventsByDay.set(key, list);
   };
 
   const shootTasks = await prisma.task.findMany({ where: { taskId: "shoot" } });
   const shootOwnerMap = new Map(shootTasks.map((t) => [`${t.clientCode}:${t.scopeKey}`, t.owner]));
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const curMonday = mondayOf(today);
+  const curSunday = new Date(curMonday.getTime() + 6 * 86400000);
   const crewCounts: Record<string, number> = {};
-  const tallyCrew = (clientCode: string, scopeKey: string) => {
-    const owner = shootOwnerMap.get(`${clientCode}:${scopeKey}`) || "Brody";
-    crewCounts[owner] = (crewCounts[owner] || 0) + 1;
+  const tallyCrew = (clientCode: string, scopeKey: string, date: Date) => {
+    if (date >= curMonday && date <= curSunday) {
+      const owner = shootOwnerMap.get(`${clientCode}:${scopeKey}`) || "Brody";
+      crewCounts[owner] = (crewCounts[owner] || 0) + 1;
+    }
   };
 
   for (const c of clients) {
     if (c.shootDate) {
-      addEvent(c.shootDate, c.name, "Shoot", "shoot");
-      if (c.shootDate >= monday && c.shootDate <= new Date(monday.getTime() + 6 * 86400000)) tallyCrew(c.code, "main");
+      pushEvent(c.shootDate, { code: c.code, title: c.name, sub: "Shoot", kind: "shoot" });
+      tallyCrew(c.code, "main", c.shootDate);
     }
   }
-  for (const sd of shootDates) {
+  for (const sd of shootDateRows) {
     const client = clients.find((c) => c.code === sd.clientCode);
-    if (!client) continue;
+    if (!client || !sd.date) continue;
     const monthMatch = sd.scopeKey.match(/^m(\d+)$/);
-    const label = monthMatch ? `Month ${monthMatch[1]} shoot` : "Shoot";
-    addEvent(sd.date, client.name, label, "shoot");
-    if (sd.date! >= monday && sd.date! <= new Date(monday.getTime() + 6 * 86400000)) tallyCrew(client.code, sd.scopeKey);
-    const due = addBusinessDays(sd.date, 10);
-    addEvent(due, client.name, "Deliverables due", "deadline");
+    const discoveryMatch = sd.scopeKey.match(/^m(\d+)-discovery$/);
+    const approvalMatch = sd.scopeKey.match(/^m(\d+)-approval$/);
+    if (sd.scopeKey === "main" || monthMatch) {
+      const label = monthMatch ? `Month ${monthMatch[1]} shoot` : "Shoot";
+      pushEvent(sd.date, { code: client.code, title: client.name, sub: label, kind: "shoot" });
+      tallyCrew(client.code, sd.scopeKey, sd.date);
+      pushEvent(addBusinessDays(sd.date, 10), { code: client.code, title: client.name, sub: "Deliverables due", kind: "deadline" });
+    } else if (discoveryMatch) {
+      pushEvent(sd.date, { code: client.code, title: client.name, sub: `Month ${discoveryMatch[1]} discovery call`, kind: "meeting" });
+    } else if (approvalMatch) {
+      pushEvent(sd.date, { code: client.code, title: client.name, sub: `Month ${approvalMatch[1]} content plan approval`, kind: "meeting" });
+    }
   }
-
-  const KIND_STYLE: Record<string, { bg: string; accent: string; fg: string }> = {
-    shoot: { bg: "#eef1fd", accent: "#3754db", fg: "#23306e" },
-    meeting: { bg: "#f4eefc", accent: "#7c3aed", fg: "#5b2aa0" },
-    deadline: { bg: "#fdf3e7", accent: "#d97706", fg: "#8a4d09" },
-  };
-
-  const week = days.map((d) => ({
-    dow: d.dow,
-    dnum: d.dnum,
-    today: d.isToday,
-    colBg: d.isToday ? "#fbfcff" : "#fff",
-    numColor: d.isToday ? "#3754db" : "#1a1d21",
-    events: d.events.map((e) => ({ ...e, ...KIND_STYLE[e.kind] })),
-  }));
 
   const needsBooking = clients
     .filter((c) => !c.shootDate && c.lane === "Onboarding" && isRecurring(c.type))
@@ -441,7 +402,78 @@ export async function listSchedule() {
       return { name, count, initials: av.initials, bg: av.bg, fg: av.fg };
     });
 
-  return { week, needsBooking, crewLoad, weekLabel: `${monday.toLocaleDateString("en-US", { month: "short", day: "numeric" })} – ${new Date(monday.getTime() + 6 * 86400000).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}` };
+  return { eventsByDay, needsBooking, crewLoad, today };
+}
+
+function styledDayEvents(eventsByDay: Map<string, CalendarEvent[]>, d: Date) {
+  return (eventsByDay.get(toDateInputValue(d)) || []).map((e) => ({ ...e, ...CALENDAR_KIND_STYLE[e.kind] }));
+}
+
+export type CalendarView = "week" | "month";
+
+export async function listCalendar(view: CalendarView, anchorISO?: string) {
+  await repairOrphanedMonthlyVideos();
+  await repairStuckMonths();
+  await repairPriyaOwner();
+  await repairJulesAssignments();
+
+  const { eventsByDay, needsBooking, crewLoad, today } = await gatherCalendarEvents();
+  const anchor = anchorISO ? new Date(anchorISO + "T00:00:00") : new Date(today);
+
+  if (view === "week") {
+    const monday = mondayOf(anchor);
+    const dayNames = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    const week = dayNames.map((dow, i) => {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i);
+      const isToday = d.toDateString() === today.toDateString();
+      return { dow, dnum: String(d.getDate()), today: isToday, colBg: isToday ? "#fbfcff" : "#fff", numColor: isToday ? "#3754db" : "#1a1d21", events: styledDayEvents(eventsByDay, d) };
+    });
+    const sunday = new Date(monday.getTime() + 6 * 86400000);
+    return {
+      view: "week" as const,
+      label: `${monday.toLocaleDateString("en-US", { month: "short", day: "numeric" })} – ${sunday.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}`,
+      week,
+      prevAnchor: toDateInputValue(new Date(monday.getTime() - 7 * 86400000)),
+      nextAnchor: toDateInputValue(new Date(monday.getTime() + 7 * 86400000)),
+      todayAnchor: toDateInputValue(today),
+      needsBooking,
+      crewLoad,
+    };
+  }
+
+  const monthStart = new Date(anchor.getFullYear(), anchor.getMonth(), 1);
+  const monthEnd = new Date(anchor.getFullYear(), anchor.getMonth() + 1, 0);
+  const gridStart = mondayOf(monthStart);
+  const gridEnd = new Date(mondayOf(monthEnd).getTime() + 6 * 86400000);
+  const totalDays = Math.round((gridEnd.getTime() - gridStart.getTime()) / 86400000) + 1;
+
+  const cells = Array.from({ length: totalDays }, (_, i) => {
+    const d = new Date(gridStart);
+    d.setDate(gridStart.getDate() + i);
+    const evs = styledDayEvents(eventsByDay, d);
+    return {
+      date: toDateInputValue(d),
+      dnum: d.getDate(),
+      inMonth: d.getMonth() === anchor.getMonth(),
+      isToday: d.toDateString() === today.toDateString(),
+      events: evs.slice(0, 3),
+      moreCount: Math.max(0, evs.length - 3),
+    };
+  });
+  const weeks: (typeof cells)[] = [];
+  for (let i = 0; i < cells.length; i += 7) weeks.push(cells.slice(i, i + 7));
+
+  return {
+    view: "month" as const,
+    label: anchor.toLocaleDateString("en-US", { month: "long", year: "numeric" }),
+    weeks,
+    prevAnchor: toDateInputValue(new Date(anchor.getFullYear(), anchor.getMonth() - 1, 1)),
+    nextAnchor: toDateInputValue(new Date(anchor.getFullYear(), anchor.getMonth() + 1, 1)),
+    todayAnchor: toDateInputValue(today),
+    needsBooking,
+    crewLoad,
+  };
 }
 
 export async function listUpcoming() {
@@ -449,36 +481,16 @@ export async function listUpcoming() {
   await repairStuckMonths();
   await repairPriyaOwner();
   await repairJulesAssignments();
-  const clients = await prisma.client.findMany({ where: { active: true } });
-  const shootDates = (await prisma.shootDate.findMany({ where: { date: { not: null } } })).filter((s) => s.scopeKey === "main" || /^m\d+$/.test(s.scopeKey));
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const { eventsByDay, today } = await gatherCalendarEvents();
 
-  type Item = { code: string; name: string; date: Date; title: string; sub: string; kind: "shoot" | "deadline" };
-  const items: Item[] = [];
-
-  for (const c of clients) {
-    if (c.shootDate && c.shootDate >= today) {
-      items.push({ code: c.code, name: c.name, date: c.shootDate, title: c.name, sub: "Shoot day", kind: "shoot" });
-    }
+  const items: (CalendarEvent & { date: Date })[] = [];
+  for (const [key, evs] of eventsByDay) {
+    const date = new Date(key + "T00:00:00");
+    if (date >= today) for (const e of evs) items.push({ ...e, date });
   }
-  for (const sd of shootDates) {
-    const client = clients.find((c) => c.code === sd.clientCode);
-    if (!client) continue;
-    const monthMatch = sd.scopeKey.match(/^m(\d+)$/);
-    const label = monthMatch ? `Month ${monthMatch[1]} shoot` : "Shoot day";
-    if (sd.date! >= today) items.push({ code: client.code, name: client.name, date: sd.date!, title: client.name, sub: label, kind: "shoot" });
-    const due = addBusinessDays(sd.date, 10);
-    if (due && due >= today) items.push({ code: client.code, name: client.name, date: due, title: client.name, sub: "Deliverables due", kind: "deadline" });
-  }
-
   items.sort((a, b) => a.date.getTime() - b.date.getTime());
 
-  const STYLE: Record<string, { bg: string; accent: string }> = {
-    shoot: { bg: "#eef1fd", accent: "#3754db" },
-    meeting: { bg: "#f4eefc", accent: "#7c3aed" },
-    deadline: { bg: "#fdf3e7", accent: "#d97706" },
-  };
+  const KIND_LABEL: Record<CalendarEvent["kind"], string> = { shoot: "Shoot", meeting: "Meeting", deadline: "Deadline" };
   const MON_NAMES = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
 
   return items.slice(0, 8).map((u) => ({
@@ -487,9 +499,9 @@ export async function listUpcoming() {
     dnum: String(u.date.getDate()),
     title: u.title,
     sub: u.sub,
-    kindLabel: u.kind === "shoot" ? "Shoot" : "Deadline",
-    bg: STYLE[u.kind].bg,
-    accent: STYLE[u.kind].accent,
+    kindLabel: KIND_LABEL[u.kind],
+    bg: CALENDAR_KIND_STYLE[u.kind].bg,
+    accent: CALENDAR_KIND_STYLE[u.kind].accent,
   }));
 }
 
@@ -504,8 +516,9 @@ export async function listActiveEditsCount() {
 }
 
 export async function listShootsThisWeekCount() {
-  const { week } = await listSchedule();
-  return week.reduce((a, d) => a + d.events.filter((e) => e.kind === "shoot").length, 0);
+  const result = await listCalendar("week");
+  if (result.view !== "week") return 0;
+  return result.week.reduce((a, d) => a + d.events.filter((e) => e.kind === "shoot").length, 0);
 }
 
 const CONTRACTS_FALLBACK: Record<string, { plan: string }> = {};
