@@ -5,6 +5,7 @@ import FolderMenu from "@/components/FolderMenu";
 import OnboardingCard from "@/components/OnboardingCard";
 import PromoTasksDeliverables from "@/components/PromoTasksDeliverables";
 import MonthSection from "@/components/MonthSection";
+import ContentPlanSection from "@/components/ContentPlanSection";
 import ClientInfoCard from "@/components/ClientInfoCard";
 import FilesLinksCard from "@/components/FilesLinksCard";
 
@@ -30,6 +31,9 @@ export default async function DetailPage({ params }: { params: Promise<{ code: s
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <div style={{ fontSize: 20, fontWeight: 700, letterSpacing: "-.01em" }}>{detail.name}</div>
                 <span style={{ fontFamily: MONO, fontSize: 9.5, letterSpacing: ".06em", textTransform: "uppercase", padding: "3px 8px", borderRadius: 5, background: detail.typeBg, color: detail.typeFg }}>{detail.type}</span>
+                {!detail.active && (
+                  <span style={{ fontFamily: MONO, fontSize: 9.5, letterSpacing: ".06em", textTransform: "uppercase", padding: "3px 8px", borderRadius: 5, background: "#eef0f3", color: "#5b6470" }}>Inactive</span>
+                )}
               </div>
               <div style={{ fontSize: 12.5, color: "#8a9099", marginTop: 5 }}>{detail.metaLine}</div>
             </div>
@@ -65,6 +69,7 @@ export default async function DetailPage({ params }: { params: Promise<{ code: s
         <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr", gap: 18, alignItems: "start" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
             {detail.onboarding.show && <OnboardingCard code={detail.code} onboarding={detail.onboarding} />}
+            {detail.isPromo && <ContentPlanSection clientCode={detail.code} scopeKey="main" concepts={detail.contentPlan} />}
             {detail.isPromo && <PromoTasksDeliverables code={detail.code} detail={detail} />}
             {detail.isRetainer && detail.monthSections.map((ms) => <MonthSection key={ms.month} clientCode={detail.code} section={ms} />)}
           </div>

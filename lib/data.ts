@@ -114,7 +114,7 @@ export async function listDashboardClients() {
   await repairStuckMonths();
   await repairPriyaOwner();
   await repairJulesAssignments();
-  const clients = await prisma.client.findMany({ orderBy: { createdAt: "asc" } });
+  const clients = await prisma.client.findMany({ where: { active: true }, orderBy: { createdAt: "asc" } });
   const allVideos = await prisma.video.findMany();
 
   const rows = clients.map((c) => {
@@ -218,7 +218,7 @@ export async function listClientOptions() {
   await repairStuckMonths();
   await repairPriyaOwner();
   await repairJulesAssignments();
-  const clients = await prisma.client.findMany({ orderBy: { createdAt: "asc" } });
+  const clients = await prisma.client.findMany({ where: { active: true }, orderBy: { createdAt: "asc" } });
   return clients.map((c) => ({
     code: c.code,
     name: c.name,
@@ -234,10 +234,10 @@ export async function listKanbanBoard() {
   await repairPriyaOwner();
   await repairJulesAssignments();
   const companyOrder = await getCompanyOrder();
-  const clients = await prisma.client.findMany();
+  const clients = await prisma.client.findMany({ where: { active: true } });
   const clientMap = new Map(clients.map((c) => [c.code, c]));
   const allVideos = await prisma.video.findMany({ orderBy: { id: "asc" } });
-  const boardVideos = allVideos.filter((v) => v.month === null || v.stage !== "Final Delivery");
+  const boardVideos = allVideos.filter((v) => clientMap.has(v.clientCode) && (v.month === null || v.stage !== "Final Delivery"));
   const shootDates = await prisma.shootDate.findMany();
   const shootDateMap = new Map(shootDates.map((s) => [`${s.clientCode}:${s.scopeKey}`, s.date]));
 
@@ -321,7 +321,7 @@ export async function listLifecycleLanes() {
   const laneKeyMap: Record<string, string> = {
     "Delivered / Live": "Delivered/Live",
   };
-  const clients = await prisma.client.findMany({ orderBy: { createdAt: "asc" } });
+  const clients = await prisma.client.findMany({ where: { active: true }, orderBy: { createdAt: "asc" } });
   return LANES.map((label) => {
     const key = laneKeyMap[label] || label;
     const items = clients
@@ -351,7 +351,7 @@ export async function listSchedule() {
   await repairStuckMonths();
   await repairPriyaOwner();
   await repairJulesAssignments();
-  const clients = await prisma.client.findMany();
+  const clients = await prisma.client.findMany({ where: { active: true } });
   const shootDates = (await prisma.shootDate.findMany({ where: { date: { not: null } } })).filter((s) => s.scopeKey === "main" || /^m\d+$/.test(s.scopeKey));
 
   const today = new Date();
@@ -449,7 +449,7 @@ export async function listUpcoming() {
   await repairStuckMonths();
   await repairPriyaOwner();
   await repairJulesAssignments();
-  const clients = await prisma.client.findMany();
+  const clients = await prisma.client.findMany({ where: { active: true } });
   const shootDates = (await prisma.shootDate.findMany({ where: { date: { not: null } } })).filter((s) => s.scopeKey === "main" || /^m\d+$/.test(s.scopeKey));
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -497,7 +497,7 @@ export async function listActiveEditsCount() {
   await repairOrphanedMonthlyVideos();
   await repairStuckMonths();
   const videos = await prisma.video.findMany({
-    where: { stage: { not: "On Queue" } },
+    where: { stage: { not: "On Queue" }, client: { active: true } },
     include: { client: { select: { type: true, currentMonth: true } } },
   });
   return videos.filter((v) => (isRecurring(v.client.type) ? v.month === (v.client.currentMonth || 1) : v.month === null)).length;
@@ -520,9 +520,10 @@ export async function getClientDetail(code: string) {
   if (!client) return null;
 
   const menu = [
-    { label: "Retainers", dot: "#0f766e", clients: clients.filter((c) => c.type === "RETAINER") },
-    { label: "Repeat clients", dot: "#c2410c", clients: clients.filter((c) => c.type === "REPEAT") },
-    { label: "Promo", dot: "#3754db", clients: clients.filter((c) => c.type === "PROMO") },
+    { label: "Retainers", dot: "#0f766e", clients: clients.filter((c) => c.active && c.type === "RETAINER") },
+    { label: "Repeat clients", dot: "#c2410c", clients: clients.filter((c) => c.active && c.type === "REPEAT") },
+    { label: "Promo", dot: "#3754db", clients: clients.filter((c) => c.active && c.type === "PROMO") },
+    { label: "Inactive", dot: "#9aa1aa", clients: clients.filter((c) => !c.active) },
   ].map((g) => ({
     label: g.label,
     dot: g.dot,
@@ -540,6 +541,31 @@ export async function getClientDetail(code: string) {
   }));
 
   const isRetainer = isRecurring(client.type);
+
+  const allConcepts = await prisma.concept.findMany({
+    where: { clientCode: code },
+    orderBy: { order: "asc" },
+    include: { shots: { orderBy: { order: "asc" } } },
+  });
+  const conceptsForScope = (scopeKey: string) =>
+    allConcepts
+      .filter((c) => c.scopeKey === scopeKey)
+      .map((c) => ({
+        id: c.id,
+        code: c.code,
+        title: c.title,
+        concept: c.concept || "",
+        focus: c.focus || "",
+        reference: c.reference || "",
+        talent: c.talent || "",
+        notes: c.notes,
+        questions: c.questions,
+        wrapped: !!c.wrappedAt,
+        shots: c.shots.map((s) => ({ id: s.id, text: s.text, checked: s.checked })),
+        done: c.shots.filter((s) => s.checked).length,
+        total: c.shots.length,
+      }));
+
   const queueVideos = await prisma.video.findMany({ where: { clientCode: code, month: null }, orderBy: { id: "asc" } });
   const tasks = await prisma.task.findMany({ where: { clientCode: code } });
   const shootDates = await prisma.shootDate.findMany({ where: { clientCode: code } });
@@ -712,6 +738,7 @@ export async function getClientDetail(code: string) {
         hasDeliverables: moDeliverables.length > 0,
         delivDone: moDeliverables.filter((v) => v.stage === "Final Delivery").length,
         delivTotal: moDeliverables.length,
+        contentPlan: conceptsForScope(scopeKey),
       };
     });
   };
@@ -737,6 +764,7 @@ export async function getClientDetail(code: string) {
     metaLine,
     account: client.owner,
     editor: client.editor || "—",
+    active: client.active,
     isRetainer,
     isPromo: !isRetainer,
     menu,
@@ -756,6 +784,7 @@ export async function getClientDetail(code: string) {
     onboarding: { show: !isRetainer, tasks: onboarding, done: onbDone, total: onboarding.length, allComplete: onbDone === onboarding.length },
     tasks: mainTasks,
     deliverables,
+    contentPlan: conceptsForScope("main"),
     hasDeliverables: deliverables.length > 0,
     irTotal: queueVideos.reduce((a, v) => a + v.ir, 0),
     crTotal: queueVideos.reduce((a, v) => a + v.cr, 0),
@@ -774,7 +803,7 @@ const RETAINER_STATUS_OPTIONS = ["Not started", "In progress", "Complete", "Not 
 export async function getTeamBoard(member: string) {
   await repairOrphanedMonthlyVideos();
   await repairStuckMonths();
-  const clients = await prisma.client.findMany({ orderBy: { createdAt: "asc" } });
+  const clients = await prisma.client.findMany({ where: { active: true }, orderBy: { createdAt: "asc" } });
   const av = avatar(member);
 
   type BoardTask = {

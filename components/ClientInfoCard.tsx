@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { updateClientInfo, updateShootDate } from "@/lib/actions";
+import { updateClientInfo, updateShootDate, setClientActive } from "@/lib/actions";
 import type { getClientDetail } from "@/lib/data";
 
 const MONO = "'IBM Plex Mono', monospace";
@@ -11,6 +11,7 @@ const labelStyle: React.CSSProperties = { fontFamily: MONO, fontSize: 9, textTra
 type Detail = NonNullable<Awaited<ReturnType<typeof getClientDetail>>>;
 
 export default function ClientInfoCard({ code, detail }: { code: string; detail: Detail }) {
+  const [togglePending, toggleActive] = useTransition();
   const [, startTransition] = useTransition();
   const [contact, setContact] = useState(detail.info.contact === "—" ? "" : detail.info.contact);
   const [email, setEmail] = useState(detail.info.email === "—" ? "" : detail.info.email);
@@ -29,6 +30,9 @@ export default function ClientInfoCard({ code, detail }: { code: string; detail:
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <div style={{ fontSize: 13, fontWeight: 600 }}>{detail.name}</div>
             <span style={{ fontFamily: MONO, fontSize: 8.5, letterSpacing: ".06em", textTransform: "uppercase", padding: "2px 6px", borderRadius: 4, background: detail.typeBg, color: detail.typeFg }}>{detail.type}</span>
+            {!detail.active && (
+              <span style={{ fontFamily: MONO, fontSize: 8.5, letterSpacing: ".06em", textTransform: "uppercase", padding: "2px 6px", borderRadius: 4, background: "#eef0f3", color: "#5b6470" }}>Inactive</span>
+            )}
           </div>
         </div>
         {detail.isPromo && (
@@ -113,6 +117,27 @@ export default function ClientInfoCard({ code, detail }: { code: string; detail:
             />
           </div>
         </div>
+        <div style={{ height: 1, background: "#eef0f3", margin: "1px 0" }} />
+        <button
+          onClick={() => {
+            if (detail.active && !window.confirm(`Move ${detail.name} to Inactive? They'll drop off the dashboard, pipeline, schedule, and client pipeline until reactivated.`)) return;
+            toggleActive(() => setClientActive(code, !detail.active));
+          }}
+          disabled={togglePending}
+          style={{
+            border: detail.active ? "1px solid #f6c9cd" : "1px solid #cdd2d8",
+            background: detail.active ? "#fdecec" : "#fff",
+            color: detail.active ? "#c2353a" : "#1a1d21",
+            borderRadius: 9,
+            padding: "9px 12px",
+            fontSize: 12.5,
+            fontWeight: 600,
+            cursor: togglePending ? "default" : "pointer",
+            opacity: togglePending ? 0.6 : 1,
+          }}
+        >
+          {detail.active ? "Move to inactive" : "Reactivate client"}
+        </button>
       </div>
     </div>
   );

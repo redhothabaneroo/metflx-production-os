@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import TaskRow from "./TaskRow";
+import ContentPlanSection from "./ContentPlanSection";
 import { updateShootDate, setDateNotApplicable } from "@/lib/actions";
 import { isTaskDone } from "@/lib/business";
 import type { getClientDetail } from "@/lib/data";
@@ -166,6 +167,10 @@ export default function MonthSection({ clientCode, section }: { clientCode: stri
               ) : (
                 <div style={{ padding: "20px 8px", textAlign: "center", color: "#9aa1aa", fontSize: 12, borderTop: "1px solid #eef0f3" }}>No deliverables yet for this month.</div>
               ))}
+          </div>
+
+          <div style={{ borderTop: "1px solid #eef0f3", paddingTop: 14 }}>
+            <ContentPlanSection clientCode={clientCode} scopeKey={scopeKey} concepts={section.contentPlan} bare />
           </div>
         </div>
       )}
