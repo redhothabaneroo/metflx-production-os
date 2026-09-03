@@ -30,6 +30,9 @@ export default async function DetailPage({ params }: { params: Promise<{ code: s
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <div style={{ fontSize: 20, fontWeight: 700, letterSpacing: "-.01em" }}>{detail.name}</div>
                 <span style={{ fontFamily: MONO, fontSize: 9.5, letterSpacing: ".06em", textTransform: "uppercase", padding: "3px 8px", borderRadius: 5, background: detail.typeBg, color: detail.typeFg }}>{detail.type}</span>
+                {!detail.active && (
+                  <span style={{ fontFamily: MONO, fontSize: 9.5, letterSpacing: ".06em", textTransform: "uppercase", padding: "3px 8px", borderRadius: 5, background: "#eef0f3", color: "#5b6470" }}>Inactive</span>
+                )}
               </div>
               <div style={{ fontSize: 12.5, color: "#8a9099", marginTop: 5 }}>{detail.metaLine}</div>
             </div>

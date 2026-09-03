@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
 
     const [{ retainers, repeats, promos }, allClients, allVideos, shootDateRows, taskRows, customTaskRows] = await Promise.all([
       listDashboardClients(),
-      prisma.client.findMany(),
+      prisma.client.findMany({ where: { active: true } }),
       prisma.video.findMany(),
       prisma.shootDate.findMany(),
       prisma.task.findMany({ where: { status: { not: "Complete" } } }),
@@ -167,8 +167,6 @@ export async function GET(request: NextRequest) {
         const pendingSteps = detail.onboarding.tasks.filter((t) => !isTaskDone(t.status)).map((t) => t.label);
         onboarding.push({ client: row.name, owner: row.owner, done: detail.onboarding.done, total: detail.onboarding.total, pendingSteps });
       } else {
-        // No "inactive"/churned flag exists on Client — every retainer/
-        // repeat client is included.
         const currentSection = detail.monthSections.find((m) => m.month === detail.currentMonth);
         const currentTasks = currentSection?.tasks || [];
         retainerClients.push({
@@ -190,16 +188,16 @@ export async function GET(request: NextRequest) {
 
     // 4. videoEditing
     const videoEditing = allVideos
-      .filter((v) => v.stage !== "Final Delivery")
+      .filter((v) => v.stage !== "Final Delivery" && clientMap.has(v.clientCode))
       .map((v) => {
-        const client = clientMap.get(v.clientCode);
+        const client = clientMap.get(v.clientCode)!;
         const shootDate = shootDateFor(v.clientCode, v.month);
         const due = addBusinessDays(shootDate, 10);
         return {
-          client: client?.name || v.clientCode,
+          client: client.name,
           videoCode: v.code,
           stage: v.stage,
-          editor: client?.editor || null,
+          editor: client.editor || null,
           dueDate: due ? fmtDateShort(due) : null,
           overdue: due ? startOfDay(due).getTime() < today.getTime() : false,
         };

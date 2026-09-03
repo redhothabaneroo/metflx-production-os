@@ -249,6 +249,14 @@ export async function updateFileLink(clientCode: string, tag: "RAW" | "FIO" | "D
   revalidatePath("/detail/" + clientCode);
 }
 
+// Moving a client to inactive pulls them off every active-ops screen
+// (dashboard, kanban, schedule, lifecycle pipeline) but keeps them fully
+// intact under the "Inactive" folder group so they can resurface later.
+export async function setClientActive(clientCode: string, active: boolean) {
+  await prisma.client.update({ where: { code: clientCode }, data: { active } });
+  revalidateAll();
+}
+
 export async function createCustomTask(input: { clientCode: string; label: string; owner: string; dueDate: string }) {
   await prisma.customTask.create({
     data: {

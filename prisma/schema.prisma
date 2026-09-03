@@ -37,6 +37,7 @@ model Client {
   rawFolderLink    String?
   frameIoLink      String?
   finalDeliveryLink String?
+  active           Boolean   @default(true)
   createdAt        DateTime  @default(now())
 
   videos      Video[]
