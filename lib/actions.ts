@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "./db";
 import { VIDEO_TITLES, PROMO_STAGE_OPTIONS, RETAINER_STAGE_OPTIONS, RETAINER_TASK_DEFS, REPEAT_TASK_DEFS, isRecurring, isMonthTaskListComplete } from "./business";
+import { extractConcepts, type ParsedConcept } from "./anthropic";
 
 // Once every task in a retainer/repeat client's current month is done,
 // move them into the next month automatically — nothing else in this app
@@ -285,4 +286,54 @@ export async function updateCustomTaskDueDate(id: number, dueDate: string) {
     data: { dueDate: dueDate ? new Date(dueDate + "T00:00:00") : null },
   });
   revalidatePath("/team", "layout");
+}
+
+// Parses pasted content-plan text into structured concepts for the caller
+// to review before anything is saved — see saveContentPlan for the write.
+export async function parseContentPlanText(rawText: string): Promise<ParsedConcept[]> {
+  const trimmed = rawText.trim();
+  if (!trimmed) throw new Error("Paste the content plan text first.");
+  return extractConcepts(trimmed);
+}
+
+export async function saveContentPlan(clientCode: string, scopeKey: string, concepts: ParsedConcept[]) {
+  for (let i = 0; i < concepts.length; i++) {
+    const c = concepts[i];
+    const code = c.code.trim() || `C${i + 1}`;
+    const data = {
+      title: c.title.trim() || code,
+      concept: c.concept.trim() || null,
+      focus: c.focus.trim() || null,
+      reference: c.reference.trim() || null,
+      talent: c.talent.trim() || null,
+      notes: c.notes.map((n) => n.trim()).filter(Boolean),
+      questions: c.questions.map((q) => q.trim()).filter(Boolean),
+      order: i,
+    };
+    const existing = await prisma.concept.findUnique({ where: { clientCode_scopeKey_code: { clientCode, scopeKey, code } } });
+    const shots = { create: c.shots.map((text) => text.trim()).filter(Boolean).map((text, si) => ({ text, order: si })) };
+    if (existing) {
+      await prisma.shot.deleteMany({ where: { conceptId: existing.id } });
+      await prisma.concept.update({ where: { id: existing.id }, data: { ...data, shots } });
+    } else {
+      await prisma.concept.create({ data: { clientCode, scopeKey, code, ...data, shots } });
+    }
+  }
+  revalidatePath("/detail/" + clientCode);
+}
+
+export async function toggleShot(shotId: number, checked: boolean) {
+  await prisma.shot.update({ where: { id: shotId }, data: { checked } });
+  const shot = await prisma.shot.findUniqueOrThrow({ where: { id: shotId }, include: { concept: { include: { shots: true } } } });
+  const allChecked = shot.concept.shots.length > 0 && shot.concept.shots.every((s) => s.checked);
+  await prisma.concept.update({
+    where: { id: shot.concept.id },
+    data: { wrappedAt: allChecked ? (shot.concept.wrappedAt ?? new Date()) : null },
+  });
+  revalidatePath("/detail/" + shot.concept.clientCode);
+}
+
+export async function deleteConcept(id: number) {
+  const c = await prisma.concept.delete({ where: { id } });
+  revalidatePath("/detail/" + c.clientCode);
 }

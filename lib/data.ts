@@ -541,6 +541,31 @@ export async function getClientDetail(code: string) {
   }));
 
   const isRetainer = isRecurring(client.type);
+
+  const allConcepts = await prisma.concept.findMany({
+    where: { clientCode: code },
+    orderBy: { order: "asc" },
+    include: { shots: { orderBy: { order: "asc" } } },
+  });
+  const conceptsForScope = (scopeKey: string) =>
+    allConcepts
+      .filter((c) => c.scopeKey === scopeKey)
+      .map((c) => ({
+        id: c.id,
+        code: c.code,
+        title: c.title,
+        concept: c.concept || "",
+        focus: c.focus || "",
+        reference: c.reference || "",
+        talent: c.talent || "",
+        notes: c.notes,
+        questions: c.questions,
+        wrapped: !!c.wrappedAt,
+        shots: c.shots.map((s) => ({ id: s.id, text: s.text, checked: s.checked })),
+        done: c.shots.filter((s) => s.checked).length,
+        total: c.shots.length,
+      }));
+
   const queueVideos = await prisma.video.findMany({ where: { clientCode: code, month: null }, orderBy: { id: "asc" } });
   const tasks = await prisma.task.findMany({ where: { clientCode: code } });
   const shootDates = await prisma.shootDate.findMany({ where: { clientCode: code } });
@@ -713,6 +738,7 @@ export async function getClientDetail(code: string) {
         hasDeliverables: moDeliverables.length > 0,
         delivDone: moDeliverables.filter((v) => v.stage === "Final Delivery").length,
         delivTotal: moDeliverables.length,
+        contentPlan: conceptsForScope(scopeKey),
       };
     });
   };
@@ -758,6 +784,7 @@ export async function getClientDetail(code: string) {
     onboarding: { show: !isRetainer, tasks: onboarding, done: onbDone, total: onboarding.length, allComplete: onbDone === onboarding.length },
     tasks: mainTasks,
     deliverables,
+    contentPlan: conceptsForScope("main"),
     hasDeliverables: deliverables.length > 0,
     irTotal: queueVideos.reduce((a, v) => a + v.ir, 0),
     crTotal: queueVideos.reduce((a, v) => a + v.cr, 0),

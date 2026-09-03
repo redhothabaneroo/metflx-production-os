@@ -44,6 +44,7 @@ model Client {
   tasks       Task[]
   shootDates  ShootDate[]
   customTasks CustomTask[]
+  concepts    Concept[]
 
   @@map("clients")
 }
@@ -101,4 +102,41 @@ model ShootDate {
 
   @@unique([clientCode, scopeKey])
   @@map("shoot_dates")
+}
+
+// A content plan concept, imported (via Claude, parsing a pasted doc) from
+// the team's Google Doc content plan and scoped like Task/ShootDate —
+// "main" for a promo project, "m{N}" for a retainer/repeat month.
+model Concept {
+  id         Int       @id @default(autoincrement())
+  clientCode String
+  client     Client    @relation(fields: [clientCode], references: [code], onDelete: Cascade)
+  scopeKey   String
+  code       String
+  title      String
+  concept    String?
+  focus      String?
+  reference  String?
+  talent     String?
+  notes      String[]  @default([])
+  questions  String[]  @default([])
+  order      Int       @default(0)
+  wrappedAt  DateTime?
+  createdAt  DateTime  @default(now())
+
+  shots Shot[]
+
+  @@unique([clientCode, scopeKey, code])
+  @@map("concepts")
+}
+
+model Shot {
+  id        Int     @id @default(autoincrement())
+  conceptId Int
+  concept   Concept @relation(fields: [conceptId], references: [id], onDelete: Cascade)
+  text      String
+  checked   Boolean @default(false)
+  order     Int     @default(0)
+
+  @@map("shots")
 }

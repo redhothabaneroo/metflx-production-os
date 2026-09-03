@@ -5,6 +5,7 @@ import FolderMenu from "@/components/FolderMenu";
 import OnboardingCard from "@/components/OnboardingCard";
 import PromoTasksDeliverables from "@/components/PromoTasksDeliverables";
 import MonthSection from "@/components/MonthSection";
+import ContentPlanSection from "@/components/ContentPlanSection";
 import ClientInfoCard from "@/components/ClientInfoCard";
 import FilesLinksCard from "@/components/FilesLinksCard";
 
@@ -68,6 +69,7 @@ export default async function DetailPage({ params }: { params: Promise<{ code: s
         <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr", gap: 18, alignItems: "start" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
             {detail.onboarding.show && <OnboardingCard code={detail.code} onboarding={detail.onboarding} />}
+            {detail.isPromo && <ContentPlanSection clientCode={detail.code} scopeKey="main" concepts={detail.contentPlan} />}
             {detail.isPromo && <PromoTasksDeliverables code={detail.code} detail={detail} />}
             {detail.isRetainer && detail.monthSections.map((ms) => <MonthSection key={ms.month} clientCode={detail.code} section={ms} />)}
           </div>
