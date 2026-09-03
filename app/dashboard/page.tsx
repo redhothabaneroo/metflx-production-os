@@ -101,9 +101,6 @@ export default async function DashboardPage() {
               <div style={{ fontFamily: MONO, fontSize: 10, color: "#8a9099", marginLeft: 8, textTransform: "uppercase", letterSpacing: ".07em" }}>
                 {retainers.length} active
               </div>
-              <Link href="/clients" style={{ marginLeft: "auto", color: "#3754db", font: "500 12px 'IBM Plex Sans'", textDecoration: "none" }}>
-                Pipeline view →
-              </Link>
             </div>
             <div style={{ overflowX: "auto" }}>
               <div style={{ minWidth: 680 }}>
@@ -176,7 +173,7 @@ export default async function DashboardPage() {
           <div style={{ display: "flex", alignItems: "center", marginBottom: 14, padding: "0 2px" }}>
             <div style={{ fontSize: 14, fontWeight: 600 }}>Upcoming</div>
             <Link href="/schedule" style={{ marginLeft: "auto", color: "#3754db", font: "500 12px 'IBM Plex Sans'", textDecoration: "none" }}>
-              Schedule →
+              Calendar →
             </Link>
           </div>
           <div style={{ display: "flex", gap: 14, marginBottom: 14, padding: "0 2px", fontSize: 10.5, color: "#6b7280" }}>

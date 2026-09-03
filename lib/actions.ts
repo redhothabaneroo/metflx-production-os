@@ -31,7 +31,6 @@ function revalidateAll() {
   revalidatePath("/dashboard");
   revalidatePath("/pipeline");
   revalidatePath("/schedule");
-  revalidatePath("/clients");
   revalidatePath("/detail", "layout");
 }
 
@@ -174,7 +173,6 @@ export async function updateTaskStatus(clientCode: string, scopeKey: string, tas
   });
   await maybeAdvanceMonth(clientCode, scopeKey);
   revalidatePath("/detail/" + clientCode);
-  revalidatePath("/clients");
   revalidatePath("/schedule");
   revalidatePath("/dashboard");
 }
